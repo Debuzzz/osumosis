@@ -8,9 +8,12 @@
   "engines": { "node": ">=22.12.0" },
   "scripts": {
     "dev": "concurrently -k -n server,web -c cyan,magenta \"tsx watch server/index.ts\" \"vite --host 127.0.0.1\"",
-    "build": "tsc --noEmit && vite build && tsup server/index.ts server/catalog-worker.ts server/analysis-worker.ts --format esm --platform node --target node22 --out-dir dist/server --external better-sqlite3 --external rosu-pp-js",
+    "build": "tsc --noEmit && vite build && tsup server/index.ts server/catalog-worker.ts server/analysis-worker.ts --format esm --platform node --target node22 --out-dir dist/server --external better-sqlite3 --external rosu-pp-js --external realm",
     "start": "node bin/osumosis.mjs",
-    "index": "tsx server/cli.ts"
+    "index": "tsx server/cli.ts",
+    "test": "node --import tsx --test test/settings.test.ts test/lazer-files.test.ts test/catalog.test.ts",
+    "test:realm": "node --import tsx --test test/realm.integration.ts",
+    "check:runtime": "node bin/check-runtime.mjs"
   },
   "dependencies": {
     "@fastify/static": "^10.1.5",
@@ -21,6 +24,7 @@
     "lucide-react": "^0.468.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "realm": "^20.2.0",
     "rosu-pp-js": "^4.0.1",
     "ws": "^8.18.0",
     "zod": "^4.0.0"
