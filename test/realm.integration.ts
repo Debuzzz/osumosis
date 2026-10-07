@@ -17,17 +17,17 @@ test('a real Realm snapshot imports lazer maps, hashed media and collections wit
     const [map, audio, background] = await Promise.all([storeLazerFile(files, beatmap), storeLazerFile(files, 'audio'), storeLazerFile(files, 'image')]);
     const source = path.join(root, 'client_52.realm');
     const realm = new Realm({ path: source, schemaVersion: 52, schema: [
-      { name: 'RealmFile', primaryKey: 'Hash', properties: { Hash: 'string' } },
-      { name: 'RealmNamedFileUsage', embedded: true, properties: { Filename: 'string', File: 'RealmFile' } },
+      { name: 'File', primaryKey: 'Hash', properties: { Hash: 'string' } },
+      { name: 'RealmNamedFileUsage', embedded: true, properties: { Filename: 'string', File: 'File' } },
       { name: 'BeatmapSet', primaryKey: 'ID', properties: { ID: 'string', OnlineID: 'int', DeletePending: 'bool', Files: 'RealmNamedFileUsage[]' } },
       { name: 'Beatmap', primaryKey: 'MD5Hash', properties: { Hash: 'string', MD5Hash: 'string', StarRating: 'double', Status: 'int', OnlineID: 'int', BeatmapSet: 'BeatmapSet?' } },
       { name: 'BeatmapCollection', properties: { Name: 'string', BeatmapMD5Hashes: 'string[]' } },
     ] });
     try {
       realm.write(() => {
-        const mapFile = realm.create('RealmFile', { Hash: map.hash });
-        const audioFile = realm.create('RealmFile', { Hash: audio.hash });
-        const backgroundFile = realm.create('RealmFile', { Hash: background.hash });
+        const mapFile = realm.create('File', { Hash: map.hash });
+        const audioFile = realm.create('File', { Hash: audio.hash });
+        const backgroundFile = realm.create('File', { Hash: background.hash });
         const set = realm.create('BeatmapSet', { ID: 'fixture-set', OnlineID: 456, DeletePending: false, Files: [
           { Filename: 'fixture.osu', File: mapFile }, { Filename: 'media/song.ogg', File: audioFile }, { Filename: 'background.jpg', File: backgroundFile },
         ] });
