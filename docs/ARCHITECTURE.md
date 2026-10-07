@@ -49,7 +49,7 @@ Le scan désactive les références aux fichiers disparus uniquement après une 
 
 ## Frontend et limites de la livraison
 
-Le frontend utilise React Query pour le catalogue et un WebSocket avec reconnexion pour le live. Une page charge au maximum 48 difficultés. Le regroupement par set se fait parmi les résultats de la page ; la pagination par set sera une évolution distincte.
+Le frontend utilise React Query pour le catalogue et un WebSocket avec reconnexion pour le live. La bibliothèque utilise une requête infinie et un IntersectionObserver pour charger 20 sets à la fois. `GET /api/maps?group=sets&limit=20` sélectionne les sets par leur première difficulté correspondant au tri, puis renvoie toutes leurs difficultés correspondant aux filtres dans `groups`, avec `totalSets` et un nombre de pages par sets. Le total des difficultés reste disponible dans `total`. Le mode historique par difficultés reste le défaut de l’API. Le scroll conserve les lots précédents et consulte seulement SQLite ; la découverte distante reste explicite. La virtualisation du DOM reste à réaliser.
 
 Les scénarios PP sont des simulations sans miss avec les règles du profil sélectionné. Les mods paramétrés lazer ne sont pas encore disponibles. Le graphe de strain est indexé par sections du moteur : son alignement temporel exact à une lecture de replay n’est pas encore livré.
 

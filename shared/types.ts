@@ -11,7 +11,7 @@ export interface Beatmap {
   played: boolean; lastPlayed: string | null; playCount: number;
   collections: string[]; tags: string; pp?: number; reason?: string;
 }
-export interface SearchResult { maps: Beatmap[]; total: number; page: number; pages: number }
+export interface SearchResult { maps: Beatmap[]; total: number; page: number; pages: number; groups?: Beatmap[][]; totalSets?: number }
 export interface Collection { id: number; name: string; total: number; installed: number }
 export interface Settings {
   client: OsuClient;

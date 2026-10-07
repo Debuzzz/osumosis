@@ -29,7 +29,7 @@ const sockets = new Set<WebSocket>(); let broadcastTime = 0;
 const sourceSchema = z.enum(['local', 'cached', 'new', 'all']);
 const modeSchema = z.enum(['any', '0', '1', '2', '3']);
 const statusSchema = z.enum(['any', 'ranked', 'approved', 'qualified', 'loved', 'pending', 'wip', 'graveyard', 'unknown', 'unsubmitted']);
-const searchSchema = z.object({ q: z.string().max(2000).default(''), source: sourceSchema.default('local'), mode: modeSchema.default('any'), status: statusSchema.default('any'), collection: z.string().regex(/^\d*$/).default(''), sort: z.enum(['title', 'artist', 'difficulty', 'length', 'bpm', 'recent', 'played']).default('title'), page: z.coerce.number().int().min(1).max(100000).default(1), limit: z.coerce.number().int().min(1).max(100).default(48) });
+const searchSchema = z.object({ q: z.string().max(2000).default(''), source: sourceSchema.default('local'), mode: modeSchema.default('any'), status: statusSchema.default('any'), collection: z.string().regex(/^\d*$/).default(''), sort: z.enum(['title', 'artist', 'difficulty', 'length', 'bpm', 'recent', 'played']).default('title'), page: z.coerce.number().int().min(1).max(100000).default(1), limit: z.coerce.number().int().min(1).max(100).default(48), group: z.enum(['maps', 'sets']).default('maps') });
 app.addHook('onRequest', async (request, reply) => {
   const host = request.headers.host?.split(':')[0];
   if (!['127.0.0.1', 'localhost'].includes(host || '')) return reply.code(403).send({ error: 'Hôte non autorisé.' });

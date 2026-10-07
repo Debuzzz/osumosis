@@ -72,7 +72,7 @@ Sans `--client` ni chemin, la CLI utilise le profil enregistré. Les arguments p
 - Adaptateur lazer Realm en lecture seule sur copie, maps et médias hashés, collections ; validation Windows réelle à réaliser.
 - Indexation incrémentale par taille et date, surveillance des maps et bases locales.
 - Identité des difficultés par checksum ; conservation des versions et références de collections absentes.
-- Recherche, grille/listes, filtres, tri, pagination, regroupement des difficultés d’un set présentes dans les résultats.
+- Recherche, grille/listes, filtres et tri ; chargement au scroll par lots de 20 sets, avec toutes leurs difficultés correspondant aux filtres.
 - Backgrounds et audio locaux, accès borné au dossier de la map, support des plages HTTP pour l’audio.
 - Fiche détaillée, liens vers osu!, autres difficultés, collections et tentatives.
 - Calculs rosu-pp-js dans des workers : étoiles avec mods, composantes de strain disponibles, scénarios à 95/97/98/99/100 %.
@@ -101,13 +101,15 @@ Champs texte : `artist`, `title`, `creator`, `mapper`, `version`, `tag`, `tags`,
 
 Autres : `status`, `collection`, `local`, `played`. Les valeurs inconnues de difficulté ne sont pas assimilées à zéro. Les filtres de PP, UR et replays ne sont pas encore disponibles ; ils produisent une erreur explicite plutôt qu’un résultat incorrect.
 
+La bibliothèque affiche 20 cartes de sets au départ, puis en ajoute 20 à l’approche du bas de la liste. Les résultats déjà affichés restent disponibles ; un bouton permet aussi de charger la suite ou de réessayer. Les changements de recherche, filtres, collection ou tri sélectionnent une nouvelle liste. Le scroll consulte uniquement SQLite, y compris dans Découvrir : les appels osu! restent déclenchés par les boutons explicites.
+
 ### Sources
 
 - **Installées** : fichiers observés lors de l’indexation de la bibliothèque sélectionnée.
 - **Catalogue** : toutes les métadonnées déjà enregistrées ; aucun nouvel appel API.
 - **Découvrir** : maps non installées. Le bouton de recherche déclenche explicitement un appel osu!, puis le catalogue applique les filtres locaux.
 
-Les prédicats locaux sont retirés de la requête distante. Les résultats reçus restent en base ; le moteur ne prétend pas avoir filtré tout le catalogue en ligne avec une contrainte locale. « Page suivante » poursuit le curseur officiel. Les recherches initiales identiques sont réutilisées pendant 15 minutes.
+Les prédicats locaux sont retirés de la requête distante. Les résultats reçus restent en base ; le moteur ne prétend pas avoir filtré tout le catalogue en ligne avec une contrainte locale. « Découvrir davantage » poursuit le curseur officiel. Les recherches initiales identiques sont réutilisées pendant 15 minutes.
 
 ## Limites actuelles
 

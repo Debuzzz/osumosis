@@ -7,3 +7,5 @@
 
 .client-switch { display: flex; gap: 10px; margin-bottom: 16px; }
 .client-switch .active { border-color: var(--accent, #deb0e9); background: #deb0e91a; }
+
+.catalog-loading,.catalog-load-more{display:flex;align-items:center;justify-content:center;gap:14px;padding:28px 12px;color:var(--muted);font-size:12px}.catalog-load-more{flex-direction:column;min-height:110px}.catalog-load-more>span{display:flex;align-items:center;gap:8px}.catalog-load-more .error-box{max-width:100%;overflow-wrap:anywhere}

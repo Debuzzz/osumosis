@@ -2,7 +2,7 @@ import type { Source } from '../shared/types';
 
 const numericFields: Record<string, string> = { stars: 'm.stars', difficulty: 'm.stars', bpm: 'm.bpm', length: 'm.length', ar: 'm.ar', od: 'm.od', cs: 'm.cs', hp: 'm.hp', objects: 'm.objects', plays: 'm.play_count', mode: 'm.mode', id: 'm.beatmap_id' };
 const textFields: Record<string, string> = { artist: 'm.artist', title: 'm.title', creator: 'm.creator', mapper: 'm.creator', version: 'm.version', tag: 'm.tags', tags: 'm.tags', source: 'm.source' };
-export interface SearchInput { q?: string; source?: Source; mode?: string; status?: string; collection?: string; sort?: string; page?: number; limit?: number }
+export interface SearchInput { q?: string; source?: Source; mode?: string; status?: string; collection?: string; sort?: string; page?: number; limit?: number; group?: 'maps' | 'sets' }
 export function compileSearch(input: SearchInput) {
   const where: string[] = []; const params: (string | number)[] = [];
   if (!input.source || input.source === 'local') where.push('m.local = 1');

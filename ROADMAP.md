@@ -49,7 +49,8 @@
 - [ ] Tags, notes, sauvegarde et restauration, exports CSV/JSON.
 - [ ] Parseur commun de recherche vers SQL et API : AST, unités, dates et aliases documentés.
 - [ ] Filtres PP, accuracy, misses, sliderbreaks, replay et caractéristiques.
-- [ ] Vue réellement paginée par sets, puis virtualisation pour les listes importantes.
+- [x] Chargement au scroll par lots de 20 sets complets, avec filtres et tri locaux.
+- [ ] Virtualisation pour les listes importantes.
 - [ ] Provenance/fraîcheur des champs et résolution explicite des conflits local/API.
 - [ ] Lecture des durées/BPM variables et fins de sliders via le moteur de map.
 - [ ] Détection de doublons et comparaison des révisions.

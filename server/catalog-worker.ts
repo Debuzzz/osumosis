@@ -196,6 +196,22 @@ const methods: Record<string, (input: any) => any> = {
   search(input: SearchInput) {
     const query = compileSearch(input); const limit = Math.max(1, Math.min(100, input.limit || 48)); const page = Math.max(1, input.page || 1);
     const total = (db.prepare(`SELECT COUNT(*) n FROM maps m WHERE ${query.clause}`).get(...query.params) as Row).n;
+    if (input.group === 'sets') {
+      const totalSets = (db.prepare(`SELECT COUNT(DISTINCT m.set_key) n FROM maps m WHERE ${query.clause}`).get(...query.params) as Row).n;
+      // Order each set by its first matching difficulty under the requested sort.
+      const sets = db.prepare(`SELECT m.set_key FROM (
+        SELECT m.*, ROW_NUMBER() OVER (PARTITION BY m.set_key ORDER BY ${query.order},m.checksum) AS position
+        FROM maps m WHERE ${query.clause}
+      ) m WHERE m.position=1 ORDER BY ${query.order},m.checksum LIMIT ? OFFSET ?`).all(...query.params, limit, (page - 1) * limit) as Row[];
+      const grouped = new Map<string, Beatmap[]>(sets.map(row => [row.set_key, []]));
+      if (sets.length) {
+        const rows = db.prepare(`SELECT m.* FROM maps m WHERE ${query.clause}
+          AND m.set_key IN (${sets.map(() => '?').join(',')}) ORDER BY ${query.order},m.checksum`).all(...query.params, ...sets.map(row => row.set_key)) as Row[];
+        for (const row of rows) grouped.get(row.set_key)!.push(mapRow(row));
+      }
+      const groups = [...grouped.values()];
+      return { maps: groups.flat(), groups, total, totalSets, page, pages: Math.ceil(totalSets / limit) };
+    }
     const rows = db.prepare(`SELECT m.* FROM maps m WHERE ${query.clause} ORDER BY ${query.order},m.checksum LIMIT ? OFFSET ?`).all(...query.params, limit, (page - 1) * limit) as Row[];
     return { maps: rows.map(mapRow), total, page, pages: Math.ceil(total / limit) };
   },
