@@ -84,7 +84,7 @@ function mapRow(row: Row): Beatmap {
 }
 function playRow(row: Row): Play {
   const info = JSON.parse(row.map_info);
-  return { id: row.id, checksum: row.checksum, title: info.title || 'Map inconnue', artist: info.artist || '', version: info.version || '', startedAt: row.started_at, endedAt: row.ended_at, outcome: row.outcome, mods: row.mods, client: row.client, accuracy: row.accuracy, combo: row.combo, misses: row.misses, sliderBreaks: row.slider_breaks, pp: row.pp, ur: row.ur, duration: row.duration, events: JSON.parse(row.events) };
+  return { id: row.id, checksum: row.checksum, title: info.title || 'Map inconnue', artist: info.artist || '', version: info.version || '', partial: !!info.partial, sourceConfirmed: info.sourceConfirmed, startedAt: row.started_at, endedAt: row.ended_at, outcome: row.outcome, mods: row.mods, client: row.client, accuracy: row.accuracy, combo: row.combo, misses: row.misses, sliderBreaks: row.slider_breaks, pp: row.pp, ur: row.ur, duration: row.duration, events: JSON.parse(row.events) };
 }
 async function* walk(folder: string): AsyncGenerator<string> {
   const entries = await readdir(folder, { withFileTypes: true });
@@ -242,7 +242,7 @@ const methods: Record<string, (input: any) => any> = {
   },
   plays() { return (db.prepare('SELECT * FROM plays ORDER BY started_at DESC LIMIT 100').all() as Row[]).map(playRow); },
   savePlay(input: Omit<Play, 'id'>) {
-    const info = JSON.stringify({ title: input.title, artist: input.artist, version: input.version });
+    const info = JSON.stringify({ title: input.title, artist: input.artist, version: input.version, partial: !!input.partial, sourceConfirmed: input.sourceConfirmed });
     const row = db.prepare('INSERT INTO plays(checksum,started_at,ended_at,outcome,mods,client,accuracy,combo,misses,slider_breaks,pp,ur,duration,events,map_info) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)').run(input.checksum, input.startedAt, input.endedAt, input.outcome, input.mods, input.client, input.accuracy, input.combo, input.misses, input.sliderBreaks, input.pp, input.ur, input.duration, JSON.stringify(input.events), info);
     db.prepare('UPDATE maps SET played=1,last_played=?,play_count=play_count+1 WHERE checksum=?').run(input.endedAt, input.checksum);
     return Number(row.lastInsertRowid);

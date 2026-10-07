@@ -24,21 +24,31 @@ export interface SettingsResponse { settings: PublicSettings; detectedPaths: Det
 export interface Job { running: boolean; phase: string; processed: number; total: number; errors: number; message: string; finishedAt?: string }
 export interface Status {
   maps: number; installed: number; sets: number; collections: number; plays: number;
-  modes: number[]; tosu: { connected: boolean; lastSeen: string | null; error: string | null };
+  modes: number[]; tosu: { connected: boolean; lastSeen: string | null; error: string | null; capture?: CaptureStatus };
   api: { configured: boolean; requests: number; remaining: number; cacheHits: number; nextAvailable: string | null };
   index: Job;
 }
 export interface LiveState {
   connected: boolean; state: string; client: string; paused: boolean;
-  map: { checksum: string; id: number; title: string; artist: string; version: string; time: number; duration: number; stars: number } | null;
-  play: { accuracy: number; combo: number; maxCombo: number; misses: number; sliderBreaks: number; pp: number; fcPp: number; ur: number; health: number; mods: string; hits: Record<string, number> } | null;
+  map: { checksum: string; id: number; title: string; artist: string; version: string; time: number; duration: number; stars: number; firstObject?: number; mapper?: string; bpm?: number; ar?: number; cs?: number; od?: number; hp?: number; maxCombo?: number } | null;
+  play: { accuracy: number; combo: number; maxCombo: number; misses: number; sliderBreaks: number; pp: number; fcPp: number; ur: number; health: number; mods: string; hits: Record<string, number>; score?: number; rank?: string; maxPp?: number } | null;
+  capture?: CaptureStatus;
+  history?: { time: number; pp: number; fcPp: number; accuracy: number }[];
+  ppScenarios?: { accuracy: number; pp: number }[];
 }
+export interface CaptureStatus {
+  mode: 'play' | 'replay' | 'unknown' | 'idle'; active: boolean; partial: boolean;
+  messages: number; saved: number; lastSavedAt: string | null; error: string | null;
+  statusConnected: boolean; reason: string;
+}
+export interface TosuDiagnostic { time: string; level: 'info' | 'warn' | 'error'; event: string; message: string }
 export interface PlayEvent { time: number; kind: string; count: number; accuracy: number; combo: number; pp: number; intervalStart: number; confidence: 'observed-interval' }
 export interface Play {
   id: number; checksum: string; title: string; artist: string; version: string;
   startedAt: string; endedAt: string; outcome: string; mods: string; client: string;
   accuracy: number; combo: number; misses: number; sliderBreaks: number; pp: number;
   ur: number; duration: number; events: PlayEvent[];
+  partial?: boolean; sourceConfirmed?: boolean;
 }
 export interface Analysis {
   checksum: string; mods: string; client: OsuClient; engine: string; stars: number; maxCombo: number;

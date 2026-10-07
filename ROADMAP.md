@@ -29,6 +29,9 @@
 
 ## Plays et replays
 
+- [x] Corriger la détection partie/replay (statut tosu dédié), finaliser les résultats et exposer un diagnostic de capture avec journal local.
+- [x] En direct : fond local, compteurs compacts, PP observés/FC et scénarios transmis par tosu.
+
 - [ ] Flux tosu précis, erreurs de timing et touches ; normalisation par version/capacités.
 - [ ] Séries de vie, UR et timing compressées ; pauses et trous de connexion explicites.
 - [ ] Import/indexation `.osr` et association au checksum exact.

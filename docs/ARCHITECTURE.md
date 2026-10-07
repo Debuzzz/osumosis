@@ -16,7 +16,7 @@
 
 `analysis.ts` crée au maximum deux workers rosu-pp-js concurrents. Les résultats sont sérialisés, mis en cache puis retournés au frontend. Le cache identifie checksum, client stable/lazer, mods et version du moteur. Les deux modes utilisent l’option `lazer` de rosu-pp-js et les résultats précisent le client simulé. Les workers sont interrompus après 30 secondes.
 
-`tosu.ts` normalise les snapshots v2 et suit des tentatives. Les différences de compteurs deviennent des événements localisés dans un intervalle. Une reconnexion ne doit pas inventer les événements perdus. Une capture commencée au milieu d’un play est partielle.
+`tosu.ts` normalise les snapshots v2 et suit des tentatives. Le flux auxiliaire `/tokens`, filtré sur `status`, confirme partie (2) ou replay (8) : `settings.replayUIVisible` ne permet pas cette distinction. Le mode est signalé comme non confirmé si le flux auxiliaire manque. Les replays reconnus restent des lectures et ne créent pas de tentative. Les différences de compteurs deviennent des événements localisés dans un intervalle ; les compteurs initiaux servent de référence pour éviter d’inventer des misses lors d’une capture partielle. Les résultats sont finalisés après une fenêtre de 800 ms permettant de recevoir les champs du score. Les échecs d’enregistrement sont visibles dans le snapshot et le diagnostic. `telemetry-log.ts` écrit les événements de cycle de vie uniquement, dans le terminal et un journal local avec rotation à 512 Kio. Un historique borné de 1 800 points alimente le graphe live des PP, et les scénarios d’accuracy proviennent de tosu, sans simulation supplémentaire.
 
 `osu-api.ts` utilise un token public obtenu par client credentials. Le budget compte les appels de recherche officiels ; l’obtention ponctuelle d’un token OAuth est une opération d’authentification séparée. Les requêtes identiques en cours sont mutualisées et les curseurs persistés.
 
@@ -45,6 +45,8 @@ Le scan désactive les références aux fichiers disparus uniquement après une 
 | `GET /api/assets/:key/:kind` | Map, background ou audio local |
 | `GET /api/covers/:key` | Miniature officielle en cache |
 | `GET /api/plays`, `GET /api/live` | Historique et snapshot |
+| `GET /api/tosu/diagnostics` | Capture et 80 derniers événements de cycle de vie |
+| `GET /api/live/background?checksum=...` | Fond de la map courante via tosu local, en repli du média indexé |
 | `WS /ws` | État live, progression et nouveaux plays |
 
 ## Frontend et limites de la livraison

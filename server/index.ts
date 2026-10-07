@@ -15,6 +15,7 @@ import { dataDir, loadSettings, saveSettings, publicSettings, detectInstallation
 import { within } from './stable';
 import { Covers } from './assets';
 import { selectedLibrary, settingsUpdateSchema } from './settings';
+import { TelemetryLog } from './telemetry-log';
 
 process.title = 'osumosis';
 let settings = await loadSettings();
@@ -24,6 +25,7 @@ await catalog.call('selectLibrary', selectedLibrary(settings));
 const analyzer = new Analyzer(catalog); const tosu = new Tosu(catalog);
 const osu = new OsuApi(catalog, () => settings);
 const covers = new Covers(dataDir);
+const telemetryLog = new TelemetryLog(path.join(dataDir, 'tosu.log'));
 const app = Fastify({ logger: { level: 'warn', redact: ['req.headers.authorization', 'req.body.clientSecret'] }, bodyLimit: 1024 * 1024 });
 const sockets = new Set<WebSocket>(); let broadcastTime = 0;
 const sourceSchema = z.enum(['local', 'cached', 'new', 'all']);
@@ -50,10 +52,12 @@ function broadcast(type: string, data: unknown) {
 app.get('/ws', { websocket: true }, socket => { sockets.add(socket); socket.send(JSON.stringify({ type: 'live', data: tosu.live })); socket.on('close', () => sockets.delete(socket)); socket.on('error', () => sockets.delete(socket)); });
 tosu.on('live', live => { if (Date.now() - broadcastTime > 100) { broadcast('live', live); broadcastTime = Date.now(); } });
 tosu.on('saved', id => broadcast('play-saved', id));
+tosu.on('diagnostic', entry => { telemetryLog.write(entry); broadcast('tosu-diagnostic', entry); });
 catalog.on('index', data => broadcast('index', data));
 catalog.on('failure', error => console.error('Catalogue :', error.message));
 
-app.get('/api/status', async () => ({ app: 'osumosis', ...(await catalog.call('status')), tosu: { connected: tosu.live.connected, lastSeen: tosu.lastSeen, error: tosu.error }, api: osu.status() }));
+app.get('/api/status', async () => ({ app: 'osumosis', ...(await catalog.call('status')), tosu: { connected: tosu.live.connected, lastSeen: tosu.lastSeen, error: tosu.capture.error, capture: tosu.capture }, api: osu.status() }));
+app.get('/api/tosu/diagnostics', async () => ({ capture: tosu.capture, lastSeen: tosu.lastSeen, events: [...tosu.diagnostics] }));
 app.post('/api/shutdown', async (_, reply) => { reply.send({ stopping: true }); setImmediate(() => { void app.close(); }); });
 app.get('/api/settings', async () => ({ settings: publicSettings(settings), detectedPaths: await detectInstallations() }));
 let savingSettings = false;
@@ -78,6 +82,27 @@ app.post('/api/index', () => {
 });
 app.get('/api/plays', () => catalog.call('plays'));
 app.get('/api/live', async () => tosu.live);
+app.get('/api/live/background', async (request, reply) => {
+  const { checksum } = z.object({ checksum: z.string().regex(/^[a-f0-9]{32}$/i) }).parse(request.query);
+  if (tosu.live.map?.checksum !== checksum.toLowerCase()) return reply.code(404).send({ error: 'La map en direct a changé.' });
+  // Prefer indexed media in the UI; this fallback only contacts the configured local tosu instance.
+  const url = new URL(settings.tosuUrl); url.protocol = url.protocol === 'wss:' ? 'https:' : 'http:'; url.pathname = '/files/beatmap/background';
+  try {
+    const response = await fetch(url, { redirect: 'error', signal: AbortSignal.timeout(5000) });
+    const mime = response.headers.get('content-type')?.split(';')[0];
+    if (!response.ok || !mime || !['image/jpeg', 'image/png', 'image/webp', 'image/bmp', 'image/gif'].includes(mime) || !response.body) { await response.body?.cancel(); return reply.code(404).send({ error: 'Fond indisponible auprès de tosu.' }); }
+    const chunks: Uint8Array[] = []; let size = 0;
+    const reader = response.body.getReader();
+    try {
+      while (true) {
+        const { done, value } = await reader.read(); if (done) break;
+        size += value.length; if (size > 16 * 1024 * 1024) { await reader.cancel(); throw new Error('Fond trop volumineux.'); } chunks.push(value);
+      }
+    } finally { reader.releaseLock(); }
+    if (tosu.live.map?.checksum !== checksum.toLowerCase()) return reply.code(404).send({ error: 'La map en direct a changé.' });
+    return reply.type(mime).header('Cache-Control', 'no-store').header('X-Content-Type-Options', 'nosniff').send(Buffer.concat(chunks));
+  } catch { return reply.code(404).send({ error: 'Fond indisponible auprès de tosu.' }); }
+});
 app.post('/api/recommend', request => {
   const input = z.object({ source: sourceSchema.default('local'), target: z.number().min(0).max(20).default(settings.targetStars), mode: modeSchema.default('any'), q: z.string().max(2000).default(''), collection: z.string().regex(/^\d*$/).default(''), objective: z.enum(['farm', 'improve', 'discovery', 'training']).default('farm') }).parse(request.body);
   return catalog.call('recommend', input);
@@ -145,7 +170,7 @@ if (existsSync(root)) {
   await app.register(fastifyStatic, { root, prefix: '/' });
   app.setNotFoundHandler((request, reply) => request.url.startsWith('/api/') ? reply.code(404).send({ error: 'Route introuvable.' }) : reply.sendFile('index.html'));
 } else app.get('/', async (_, reply) => reply.type('text/html').send('<h1>osu!mosis</h1><p>Frontend en développement : <a href="http://127.0.0.1:5173">ouvrir React</a>.</p>'));
-app.addHook('onClose', async () => { await tosu.stop(); for (const watcher of watchers) watcher.close(); if (watchTimer) clearTimeout(watchTimer); for (const socket of sockets) socket.close(); await catalog.close(); });
+app.addHook('onClose', async () => { await tosu.stop(); await telemetryLog.close(); for (const watcher of watchers) watcher.close(); if (watchTimer) clearTimeout(watchTimer); for (const socket of sockets) socket.close(); await catalog.close(); });
 let stopping = false;
 for (const signal of ['SIGINT', 'SIGTERM'] as const) process.on(signal, () => { if (!stopping) { stopping = true; void app.close(); } });
 try {

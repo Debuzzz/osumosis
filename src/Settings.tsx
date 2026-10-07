@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Check, ExternalLink, FolderOpen, LoaderCircle, Radio, RefreshCw, Sparkles, Target } from 'lucide-react';
 import type { PublicSettings, SettingsResponse } from '../shared/types';
 import { api } from './api';
+import { TosuDiagnostics } from './TosuDiagnostics';
 
 export function Settings({ notify, onIndex, onSaved }: { notify: (message: string) => void; onIndex: () => void; onSaved: () => void }) {
   const query = useQuery({ queryKey: ['settings'], queryFn: () => api<SettingsResponse>('/api/settings') });
@@ -51,7 +52,8 @@ export function Settings({ notify, onIndex, onSaved }: { notify: (message: strin
       <section className="settings-section">
         <div className="section-title"><Radio size={19} /><h2>Télémétrie tosu</h2></div>
         <label>Adresse WebSocket<input value={form.tosuUrl} onChange={event => field('tosuUrl', event.target.value)} /></label>
-        <p>tosu doit tourner sur ce PC. L’application se reconnecte automatiquement.</p>
+        <p>tosu doit tourner sur ce PC. L’application se reconnecte automatiquement. Le flux v2 fournit les valeurs ; le flux local /tokens confirme le mode partie/replay.</p>
+        <TosuDiagnostics />
         <a className="text-link" href="https://tosu.app/" target="_blank" rel="noreferrer">Site de tosu<ExternalLink size={13} /></a>
       </section>
       <section className="settings-section">

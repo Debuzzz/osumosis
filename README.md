@@ -44,6 +44,22 @@ L’adresse tosu initiale est `ws://127.0.0.1:24050/websocket/v2`. Les réglages
 
 La découverte en ligne nécessite le Client ID et le secret d’une application OAuth osu!. Ces champs sont facultatifs pour la bibliothèque locale. Ils sont conservés dans `.data/settings.json`, côté serveur ; le secret n’est pas renvoyé dans les réponses de réglages. Le fichier de configuration n’est pas chiffré : il utilise les permissions du compte Windows.
 
+## Capture des plays et diagnostic tosu
+
+Les parties observées sont sauvegardées à leur fin (résultat, fail, retry, abandon ou interruption). Le service attend brièvement les dernières valeurs de l’écran de résultat. Une capture commencée au milieu de la map est marquée partielle ; les premières misses déjà présentes ne sont pas inventées comme nouveaux événements.
+
+`settings.replayUIVisible` est une préférence d’interface, pas un indicateur de lecture replay. osu!mosis ouvre en plus le flux `/tokens` de la même instance tosu pour lire son statut StreamCompanion : `2` = partie, `8` = lecture replay. Si ce flux manque, l’interface et les captures portent la mention « mode non confirmé ». Les replays reconnus restent visibles dans En direct, y compris les valeurs de leur écran de résultat, et ne créent pas de tentative jouée. L’import de scores historiques/replays reste une fonctionnalité distincte à réaliser.
+
+Le panneau **Diagnostic de capture tosu**, présent dans En direct, Tes plays et Réglages, affiche les messages reçus, les sauvegardes, les transitions et les erreurs. Les événements sont également écrits dans le terminal et dans `.data/tosu.log`, avec rotation vers `.data/tosu.log.1` à 512 Kio. Le journal ne contient pas les payloads complets ni les réglages OAuth. Le nombre de sauvegardes dans le diagnostic couvre le démarrage actuel ; le total historique est celui de Tes plays.
+
+Pour fournir un instantané de télémétrie, ouvrir `http://127.0.0.1:24050/json/v2` dans un navigateur, puis actualiser pendant une partie et sur le résultat. Retirer les noms et chemins personnels avant de partager le JSON. Le journal peut aussi se lire dans l’Invite de commandes :
+
+```bat
+type .data\tosu.log
+```
+
+Le fond de map est lu en priorité dans l’index local ; en cas d’absence, osu!mosis tente le fond courant servi par tosu. Aucun téléchargement de couverture distante n’est déclenché par En direct.
+
 ## Commandes npm
 
 ```bat
@@ -77,7 +93,7 @@ Sans `--client` ni chemin, la CLI utilise le profil enregistré. Les arguments p
 - Fiche détaillée, liens vers osu!, autres difficultés, collections et tentatives.
 - Calculs rosu-pp-js dans des workers : étoiles avec mods, composantes de strain disponibles, scénarios à 95/97/98/99/100 %.
 - Cache des calculs par checksum, mods, client stable/lazer et version du moteur.
-- Connexion tosu v2, reconnexion et dashboard live.
+- Connexion tosu v2 avec statut partie/replay via `/tokens`, reconnexion et dashboard live : fond local, compteurs compacts, graphe des PP et scénarios transmis par tosu.
 - Journal des tentatives observées : résultats, fails, retries, abandons, interruptions et intervalles de misses/sliderbreaks.
 - Recherche officielle via OAuth client credentials, cinq requêtes maximum par minute, espacement de 12 secondes, curseurs et réutilisation du cache.
 - Conservation des métadonnées des découvertes sans installation dans le jeu.
@@ -134,6 +150,8 @@ Les prédicats locaux sont retirés de la requête distante. Les résultats reç
   catalog.sqlite-wal   # journal SQLite
   covers/              # médias reproductibles, éviction à 256 Mio
   snapshots/           # copies Realm temporaires, nettoyées après lecture
+  tosu.log             # événements de capture (rotation à 512 Kio)
+  tosu.log.1           # journal précédent
 ```
 
 Les métadonnées et tentatives ne sont pas effacées automatiquement. Les fichiers de jeu ne sont pas modifiés. Pour sauvegarder la base, arrêter d’abord le service puis copier `.data`.
