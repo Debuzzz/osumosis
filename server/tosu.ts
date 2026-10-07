@@ -8,7 +8,9 @@ const n = (v: unknown) => typeof v === 'number' && Number.isFinite(v) ? v : 0;
 const numberOr = (value: unknown, fallback: number) => typeof value === 'number' && Number.isFinite(value) ? value : fallback;
 const text = (value: unknown) => typeof value === 'string' ? value : '';
 const resultState = (number: unknown, name: string) => [7, 14, 17, 18].includes(Number(number)) || /result|ranking/i.test(name);
-type Attempt = Omit<Play, 'id' | 'endedAt' | 'outcome'> & { lastTime: number; lastSample: number };
+type Attempt = Omit<Play, 'id' | 'endedAt' | 'outcome'> & { lastTime: number; lastSample: number; lastScore: number; lastJudgments: number; observedGameplay: boolean };
+type StartCandidate = { checksum: string; since: number; lastTime: number; score: number; judgments: number };
+const judgmentCount = (hits: Record<string, number>) => ['0', '50', '100', '300', 'geki', 'katu'].reduce((sum, key) => sum + n(hits[key]), 0);
 
 export class Tosu extends EventEmitter {
   live: LiveState = { ...blank };
@@ -22,6 +24,7 @@ export class Tosu extends EventEmitter {
   private resultTimer?: NodeJS.Timeout;
   private generation = 0;
   private attempt: Attempt | null = null;
+  private startCandidate: StartCandidate | null = null;
   private previousTime = 0;
   private previousChecksum = '';
   private previousState = '';
@@ -48,7 +51,7 @@ export class Tosu extends EventEmitter {
     const mode = this.lastMode;
     return { mode, active: !!this.attempt, partial: !!this.attempt?.partial, messages: this.messages, saved: this.saved,
       lastSavedAt: this.lastSavedAt, error: this.saveError || this.error, statusConnected: !!connected,
-      reason: this.saveError ? 'Échec de sauvegarde : voir le diagnostic.' : mode === 'replay' ? 'Lecture replay : aucune tentative ajoutée.' : this.attempt ? (this.resultTimer ? 'Finalisation du résultat…' : 'Tentative en cours de capture.') : mode === 'idle' ? 'En attente d’une partie.' : this.suppress ? 'Tentative déjà terminée ; en attente du prochain départ.' : 'En attente de la map et de ses données.',
+      reason: this.saveError ? 'Échec de sauvegarde : voir le diagnostic.' : mode === 'replay' ? 'Lecture replay : aucune tentative ajoutée.' : this.attempt ? (this.resultTimer ? 'Finalisation du résultat…' : 'Tentative en cours de capture.') : mode === 'idle' ? 'En attente d’une partie.' : this.suppress ? 'Tentative déjà terminée ; en attente du prochain départ.' : this.startCandidate ? 'Synchronisation du départ de la map…' : 'En attente de la map et de ses données.',
     };
   }
   private publish() {
@@ -131,16 +134,44 @@ export class Tosu extends EventEmitter {
     };
     const checksum = next.map?.checksum || '', time = next.map?.time || 0;
     const retry = playing && !replay && !next.paused && time < this.previousTime - 1500 && checksum === this.previousChecksum;
-    if (this.attempt && (checksum !== this.attempt.checksum || retry || (playing && this.resultTimer))) void this.finish(retry ? 'retry' : this.resultTimer ? 'completed' : 'abandoned');
+    if (this.attempt && (checksum !== this.attempt.checksum || retry || (playing && this.resultTimer))) {
+      if (retry && !this.attempt.observedGameplay && !this.resultTimer) {
+        // A new play can briefly retain the song-selection clock and previous score.
+        // Its first clock reset is synchronization, not a played retry.
+        this.attempt = null;
+        this.log('info', 'capture-resynced', 'Horloge de départ resynchronisée sans activité de jeu observée ; aucun retry enregistré.');
+      } else void this.finish(this.resultTimer ? 'completed' : retry ? 'retry' : 'abandoned');
+    }
     if (!playing || retry || checksum !== this.previousChecksum) this.suppress = false;
     if (playing && replay && this.attempt) { this.attempt = null; this.clearResultTimer(); this.log('info', 'replay-excluded', 'Lecture replay exclue du journal des tentatives.'); }
+    if (!playing || replay || checksum !== this.startCandidate?.checksum || retry) this.startCandidate = null;
+    let startReady = false;
+    let startObservedGameplay = false;
     if (playing && !replay && next.map && !this.attempt && !this.suppress) {
+      const play = next.play!, judgments = judgmentCount(play.hits);
+      if (!this.startCandidate) this.startCandidate = { checksum, since: Date.now(), lastTime: time, score: n(play.score), judgments };
+      const candidate = this.startCandidate;
+      // Wait for asynchronously updated state, clock and score to agree before capturing.
+      if (time < candidate.lastTime - 250 || n(play.score) < candidate.score || judgments < candidate.judgments) {
+        Object.assign(candidate, { since: Date.now(), score: n(play.score), judgments });
+      }
+      candidate.lastTime = time;
+      const progressed = n(play.score) > candidate.score || judgments > candidate.judgments;
+      startObservedGameplay = progressed;
+      const atStart = time <= n(next.map.firstObject) + 1500 && judgments === 0 && n(play.score) === 0;
+      const validClock = !next.map.duration || time <= next.map.duration + 1500;
+      startReady = !next.paused && p.failed !== true && validClock && Date.now() - candidate.since >= 350 && (atStart || progressed);
+    }
+    if (startReady && next.map) {
       const play = next.play!;
-      this.attempt = { checksum, title: next.map.title, artist: next.map.artist, version: next.map.version, startedAt: this.lastSeen, mods, client: next.client, accuracy: play.accuracy, combo: play.maxCombo, misses: play.misses, sliderBreaks: play.sliderBreaks, pp: play.pp, ur: play.ur, duration: 0, events: [], lastTime: time, lastSample: -Infinity, partial: time > n(next.map.firstObject) + 1500, sourceConfirmed: mode === 'play' };
+      this.attempt = { checksum, title: next.map.title, artist: next.map.artist, version: next.map.version, startedAt: this.lastSeen, mods, client: next.client, accuracy: play.accuracy, combo: play.maxCombo, misses: play.misses, sliderBreaks: play.sliderBreaks, pp: play.pp, ur: play.ur, duration: 0, events: [], lastTime: time, lastSample: -Infinity, lastScore: n(play.score), lastJudgments: judgmentCount(play.hits), observedGameplay: startObservedGameplay, partial: time > n(next.map.firstObject) + 1500 || judgmentCount(play.hits) > 0, sourceConfirmed: mode === 'play' };
+      this.startCandidate = null;
       this.log('info', 'capture-started', `Capture démarrée (${next.client}, ${mode === 'play' ? 'partie' : 'mode non confirmé'}${this.attempt.partial ? ', partielle' : ''}).`);
     }
     if (this.attempt && playing && !replay) {
       const a = this.attempt, play = next.play!;
+      if (n(play.score) > a.lastScore || judgmentCount(play.hits) > a.lastJudgments) a.observedGameplay = true;
+      a.lastScore = n(play.score); a.lastJudgments = judgmentCount(play.hits);
       if (mode === 'play') a.sourceConfirmed = true;
       const event = (kind: string, count: number) => { if (a.events.length < 12000) a.events.push({ time, kind, count, accuracy: play.accuracy, combo: play.combo, pp: play.pp, intervalStart: a.lastTime, confidence: 'observed-interval' }); };
       if (play.misses > a.misses) event('miss', play.misses - a.misses);
@@ -171,8 +202,8 @@ export class Tosu extends EventEmitter {
   private finish(outcome: string): Promise<void> {
     this.clearResultTimer();
     const a = this.attempt; if (!a) return Promise.resolve(); this.attempt = null;
-    if (a.duration <= 0) { this.log('info', 'capture-empty', 'Capture sans données de jeu ; aucune tentative ajoutée.'); return Promise.resolve(); }
-    const { lastTime, lastSample, ...play } = a;
+    if (a.duration <= 0 || outcome !== 'completed' && !a.observedGameplay) { this.log('info', 'capture-empty', 'Capture sans activité de jeu observée ; aucune tentative ajoutée.'); return Promise.resolve(); }
+    const { lastTime, lastSample, lastScore, lastJudgments, observedGameplay, ...play } = a;
     const saving = (async () => {
       try {
         const id = await this.catalog.call('savePlay', { ...play, outcome, endedAt: new Date().toISOString() });
@@ -189,6 +220,7 @@ export class Tosu extends EventEmitter {
     this.socket = this.statusSocket = undefined;
     const outcome = this.resultTimer ? 'completed' : 'interrupted';
     void this.finish(outcome); this.live = { ...blank }; this.statusNumber = null; this.statusSeen = 0; this.lastMode = 'idle';
+    this.startCandidate = null;
     this.previousState = ''; this.previousChecksum = ''; this.previousTime = 0; this.suppress = false; this.history = []; this.historySample = -Infinity;
     await Promise.all([...this.pending]);
   }

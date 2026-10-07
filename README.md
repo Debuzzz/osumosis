@@ -46,7 +46,7 @@ La découverte en ligne nécessite le Client ID et le secret d’une application
 
 ## Capture des plays et diagnostic tosu
 
-Les parties observées sont sauvegardées à leur fin (résultat, fail, retry, abandon ou interruption). Le service attend brièvement les dernières valeurs de l’écran de résultat. Une capture commencée au milieu de la map est marquée partielle ; les premières misses déjà présentes ne sont pas inventées comme nouveaux événements.
+Les parties observées sont sauvegardées à leur fin (résultat, fail, retry, abandon ou interruption). Le service attend au moins 350 ms et des valeurs cohérentes au départ, car tosu peut encore publier le temps de prévisualisation et les compteurs de la partie précédente après être passé en état play. Un retour du temps sans activité de jeu observée ne crée pas de retry. Le service attend ensuite brièvement les dernières valeurs de l’écran de résultat. Une capture commencée au milieu de la map est marquée partielle ; les premières misses déjà présentes ne sont pas inventées comme nouveaux événements.
 
 `settings.replayUIVisible` est une préférence d’interface, pas un indicateur de lecture replay. osu!mosis ouvre en plus le flux `/tokens` de la même instance tosu pour lire son statut StreamCompanion : `2` = partie, `8` = lecture replay. Si ce flux manque, l’interface et les captures portent la mention « mode non confirmé ». Les replays reconnus restent visibles dans En direct, y compris les valeurs de leur écran de résultat, et ne créent pas de tentative jouée. L’import de scores historiques/replays reste une fonctionnalité distincte à réaliser.
 
