@@ -56,7 +56,12 @@
 
 ## Lazer et exploitation
 
-- [ ] Adaptateur Realm en lecture seule, versionné, indépendant du service Node.
+- [x] Deux profils stable/lazer, lazer par défaut pour les nouvelles configurations, migration des anciens réglages.
+- [x] Simulations stable/lazer et séparation des caches par client.
+- [x] Prototype Realm sur copie en lecture seule, validation des champs du schéma, maps, médias et collections.
+- [x] Valider le module natif Realm et des indexations successives d’une base synthétique dans le cloud, sans modification de la source.
+- [ ] Valider la lecture sur une bibliothèque réelle lazer Windows, plusieurs versions, fichiers manquants et sets supprimés.
+- [x] Lancement npm documenté et commande de vérification des dépendances natives.
 - [ ] Import d’exports `.osz`, `.osr`, `collection.db` en solution de repli.
 - [ ] Adaptateurs d’ouverture stable/lazer/replay, capacités du gestionnaire de protocole explicites.
 - [ ] Commande de recommandation dans la CLI.
@@ -68,4 +73,4 @@
 
 Bases de plusieurs versions, bibliothèque partielle, maps non soumises, map modifiée, anciens replays, imports de collections absentes, mode hors ligne, API 429, requêtes simultanées, coupures de tosu, pause/retry/fail, exactitude PP/jugements et charge pendant le jeu.
 
-Le build de production est une étape de livraison. Aucun jeu de tests n’est inclus dans cette première implémentation. Les intégrations au jeu et à un compte osu! nécessitent encore des essais avec des données réelles.
+Le build de production est une étape de livraison. Des tests ciblés couvrent désormais la migration des réglages, les profils, les chemins hashés, les frontières de fichiers et les caches de calcul. `npm run test:realm` couvre séparément une base Realm synthétique et nécessite le module natif. Les intégrations au jeu et à un compte osu! nécessitent encore des essais avec des données réelles.

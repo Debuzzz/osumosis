@@ -21,7 +21,7 @@ if (process.argv[2] === 'stop') {
 } else {
 const entry = path.join(root, 'dist/server/index.js');
 if (!existsSync(entry)) {
-  console.error('osu!mosis : lancez ./osumosis.ps1 build avant le premier démarrage.');
+  console.error('osu!mosis : lancez npm run build avant le premier démarrage.');
   process.exit(1);
 }
 await import(pathToFileURL(entry).href);

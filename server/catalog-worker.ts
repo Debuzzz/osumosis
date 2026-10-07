@@ -5,7 +5,8 @@ import { createHash, randomUUID } from 'node:crypto';
 import path from 'node:path';
 import { compileSearch, type SearchInput } from './search';
 import { parseOsu, readCollections, readStableDatabase, within, type StableEntry } from './stable';
-import type { Beatmap, Job, Play, PlayEvent } from '../shared/types';
+import { openLazerLibrary, readLazerMap } from './lazer';
+import type { Beatmap, Job, LibrarySelection, Play, PlayEvent } from '../shared/types';
 
 await mkdir(workerData.dataDir, { recursive: true });
 const db = new Database(path.join(workerData.dataDir, 'catalog.sqlite'));
@@ -41,12 +42,36 @@ CREATE TABLE IF NOT EXISTS plays (id INTEGER PRIMARY KEY, checksum TEXT NOT NULL
 CREATE INDEX IF NOT EXISTS plays_map ON plays(checksum,started_at);
 CREATE TABLE IF NOT EXISTS analyses (cache_key TEXT PRIMARY KEY, checksum TEXT NOT NULL, result TEXT NOT NULL, created_at TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS discovery (query_key TEXT PRIMARY KEY, cursor TEXT, fetched_at TEXT NOT NULL, total INTEGER NOT NULL DEFAULT 0);
-PRAGMA user_version = 1;
+CREATE TABLE IF NOT EXISTS catalog_state (key TEXT PRIMARY KEY, value TEXT NOT NULL);
 `);
+const columns = new Set((db.prepare('PRAGMA table_info(maps)').all() as { name: string }[]).map(column => column.name));
+for (const name of ['asset_root', 'audio_name', 'background_name']) {
+  if (!columns.has(name)) db.exec(`ALTER TABLE maps ADD COLUMN ${name} TEXT`);
+}
+db.pragma('user_version = 2');
+let activeLibrary: LibrarySelection = { client: 'lazer', osuPath: '', songsPath: '' };
+const libraryKey = (input: LibrarySelection) => JSON.stringify(input);
+const collectionSource = () => `${activeLibrary.client}:${activeLibrary.osuPath || activeLibrary.songsPath}`;
+const legacyCollectionSource = () => activeLibrary.client === 'stable' ? activeLibrary.osuPath : '';
+function selectLibrary(input: LibrarySelection) {
+  const normalized = { client: input.client, osuPath: input.osuPath ? path.resolve(input.osuPath) : '', songsPath: input.client === 'stable' && input.songsPath ? path.resolve(input.songsPath) : '' };
+  const key = libraryKey(normalized);
+  const old = db.prepare('SELECT value FROM catalog_state WHERE key=?').get('active_library') as { value: string } | undefined;
+  if (old?.value !== key) {
+    if (job.running) throw new Error('Attendre la fin de l’indexation avant de changer de bibliothèque.');
+    db.transaction(() => {
+      db.prepare('UPDATE maps SET local=0 WHERE local=1').run();
+      db.prepare('INSERT OR REPLACE INTO catalog_state(key,value) VALUES(?,?)').run('active_library', key);
+    })();
+    job = { running: false, phase: 'idle', processed: 0, total: 0, errors: 0, message: `Profil ${input.client} sélectionné. Indexer cette bibliothèque pour afficher les maps installées.` };
+    progress();
+  }
+  activeLibrary = normalized;
+}
 let job: Job = { running: false, phase: 'idle', processed: 0, total: 0, errors: 0, message: 'Aucune indexation effectuée.' };
 function progress() { parentPort!.postMessage({ event: 'index', data: job }); }
 type Row = Record<string, any>;
-const collectionNames = db.prepare('SELECT c.name FROM collections c JOIN collection_members cm ON cm.collection_id=c.id WHERE cm.checksum=? ORDER BY c.name');
+const collectionNames = db.prepare('SELECT c.name FROM collections c JOIN collection_members cm ON cm.collection_id=c.id WHERE cm.checksum=? AND (c.source=? OR c.source=?) ORDER BY c.name');
 function mapRow(row: Row): Beatmap {
   return {
     key: row.checksum, checksum: row.checksum, beatmapId: row.beatmap_id, setId: row.set_id,
@@ -54,7 +79,7 @@ function mapRow(row: Row): Beatmap {
     status: row.status, stars: row.stars, bpm: row.bpm, length: row.length, ar: row.ar, od: row.od, cs: row.cs, hp: row.hp,
     objects: row.objects, local: !!row.local, hasBackground: !!row.local && !!row.background_path, cover: row.cover,
     played: !!row.played, lastPlayed: row.last_played, playCount: row.play_count, tags: row.tags,
-    collections: (collectionNames.all(row.checksum) as Row[]).map(v => v.name),
+    collections: (collectionNames.all(row.checksum, collectionSource(), legacyCollectionSource()) as Row[]).map(v => v.name),
   };
 }
 function playRow(row: Row): Play {
@@ -75,7 +100,7 @@ VALUES(@checksum,@beatmap_id,@set_id,@set_key,@title,@artist,@creator,@version,@
 ON CONFLICT(checksum) DO UPDATE SET beatmap_id=excluded.beatmap_id,set_id=excluded.set_id,set_key=excluded.set_key,title=excluded.title,artist=excluded.artist,creator=excluded.creator,version=excluded.version,mode=excluded.mode,
 status=CASE WHEN excluded.status='unknown' THEN maps.status ELSE excluded.status END, stars=COALESCE(excluded.stars,maps.stars),bpm=excluded.bpm,length=excluded.length,ar=excluded.ar,od=excluded.od,cs=excluded.cs,hp=excluded.hp,objects=excluded.objects,tags=excluded.tags,source=excluded.source,
 local=1,played=MAX(maps.played,excluded.played),last_played=COALESCE(excluded.last_played,maps.last_played),file_path=excluded.file_path,background_path=excluded.background_path,audio_path=excluded.audio_path,preview=excluded.preview,file_size=excluded.file_size,file_mtime=excluded.file_mtime,generation=excluded.generation,indexed_at=excluded.indexed_at`);
-async function indexLibrary(input: { osuPath: string; songsPath: string }) {
+async function indexStableLibrary(input: LibrarySelection) {
   const root = await realpath(input.songsPath || path.join(input.osuPath, 'Songs'));
   if (!(await stat(root)).isDirectory()) throw new Error('Dossier Songs introuvable.');
   const generation = randomUUID(); const warnings: string[] = [];
@@ -103,6 +128,7 @@ async function indexLibrary(input: { osuPath: string; songsPath: string }) {
           file_size: info.size, file_mtime: info.mtimeMs, generation, indexed_at: new Date().toISOString() });
         db.prepare('UPDATE maps SET local=0 WHERE file_path=? AND checksum!=?').run(file, checksum);
       }
+      db.prepare('UPDATE maps SET asset_root=?,audio_name=NULL,background_name=NULL WHERE file_path=? AND local=1').run(path.dirname(file), file);
     } catch (error) { job.errors++; if (warnings.length < 12) warnings.push(`${path.basename(file)} : ${(error as Error).message}`); }
     job.processed++;
     if (job.processed % 100 === 0) { progress(); await new Promise(resolve => setTimeout(resolve, 15)); }
@@ -113,19 +139,58 @@ async function indexLibrary(input: { osuPath: string; songsPath: string }) {
   try {
     const collections = await readCollections(path.join(input.osuPath, 'collection.db'));
     db.transaction(() => {
-      db.prepare('DELETE FROM collections WHERE source=?').run(input.osuPath);
+      db.prepare('DELETE FROM collections WHERE source=? OR source=?').run(collectionSource(), legacyCollectionSource());
       const collection = db.prepare('INSERT INTO collections(name,source) VALUES(?,?)');
       const member = db.prepare('INSERT OR IGNORE INTO collection_members(collection_id,checksum) VALUES(?,?)');
-      for (const c of collections) { const id = collection.run(c.name, input.osuPath).lastInsertRowid; for (const hash of c.hashes) member.run(id, hash); }
+      for (const c of collections) { const id = collection.run(c.name, collectionSource()).lastInsertRowid; for (const hash of c.hashes) member.run(id, hash); }
     })();
   } catch (error) { warnings.push(`Collections : ${(error as Error).message}`); }
   job = { ...job, running: false, phase: 'done', finishedAt: new Date().toISOString(), message: warnings.length ? `${job.processed} fichiers parcourus. ${warnings.join(' · ')}` : `${job.processed} difficultés indexées avec leurs collections.` }; progress();
 }
 
+async function indexLazerLibrary(input: LibrarySelection) {
+  const library = await openLazerLibrary(input.osuPath, path.join(workerData.dataDir, 'snapshots'));
+  const generation = randomUUID(), warnings: string[] = [];
+  try {
+    job.phase = 'maps'; job.message = `Lecture de ${path.basename(library.file)} · schéma ${library.version}`; progress();
+    for (const entry of library.maps) {
+      if (!entry.BeatmapSet || entry.BeatmapSet.DeletePending) continue;
+      job.total++;
+      try {
+        const map = await readLazerMap(entry, library.filesRoot), m = map.parsed;
+        if (m.beatmapId) db.prepare('DELETE FROM maps WHERE checksum=? AND local=0').run(`remote:${m.beatmapId}`);
+        insertMap.run({ checksum: map.checksum, beatmap_id: m.beatmapId, set_id: m.setId, set_key: map.setKey,
+          title: m.title, artist: m.artist, creator: m.creator, version: m.version, mode: m.mode, status: map.status, stars: map.stars,
+          bpm: m.bpm, length: m.length, ar: m.ar, od: m.od, cs: m.cs, hp: m.hp, objects: m.objects, tags: m.tags, source: m.source,
+          played: 0, last_played: null, file_path: map.file, background_path: m.background, audio_path: m.audio, preview: m.preview,
+          file_size: map.size, file_mtime: map.mtime, generation, indexed_at: new Date().toISOString() });
+        db.prepare('UPDATE maps SET asset_root=?,audio_name=?,background_name=? WHERE checksum=?').run(map.root, map.audioName, map.backgroundName, map.checksum);
+      } catch (error) {
+        job.errors++; if (warnings.length < 12) warnings.push((error as Error).message);
+      }
+      job.processed++;
+      if (job.processed % 100 === 0) { progress(); await new Promise(resolve => setTimeout(resolve, 15)); }
+    }
+    const collections = library.collections();
+    db.transaction(() => {
+      db.prepare('UPDATE maps SET local=0 WHERE local=1 AND (generation IS NULL OR generation!=?)').run(generation);
+      db.prepare('DELETE FROM collections WHERE source=?').run(collectionSource());
+      const insert = db.prepare('INSERT INTO collections(name,source) VALUES(?,?)');
+      const member = db.prepare('INSERT OR IGNORE INTO collection_members(collection_id,checksum) VALUES(?,?)');
+      for (const collection of collections) {
+        const id = insert.run(collection.name, collectionSource()).lastInsertRowid;
+        for (const hash of collection.hashes) member.run(id, hash.toLowerCase());
+      }
+    })();
+  } finally { await library.close(); }
+  job = { ...job, running: false, phase: 'done', finishedAt: new Date().toISOString(), message: `${job.processed} difficultés lazer parcourues · schéma ${library.version}.${warnings.length ? ' ' + warnings.join(' · ') : ''}` }; progress();
+}
+
 const methods: Record<string, (input: any) => any> = {
+  selectLibrary,
   status() {
     const counts = db.prepare('SELECT COUNT(*) maps,SUM(local) installed,COUNT(DISTINCT CASE WHEN local=1 THEN set_key END) sets FROM maps').get() as Row;
-    return { ...counts, installed: counts.installed || 0, collections: (db.prepare('SELECT COUNT(*) n FROM collections').get() as Row).n, plays: (db.prepare('SELECT COUNT(*) n FROM plays').get() as Row).n,
+    return { ...counts, installed: counts.installed || 0, collections: (db.prepare('SELECT COUNT(*) n FROM collections WHERE source=? OR source=?').get(collectionSource(), legacyCollectionSource()) as Row).n, plays: (db.prepare('SELECT COUNT(*) n FROM plays').get() as Row).n,
       modes: (db.prepare('SELECT DISTINCT mode FROM maps WHERE local=1 ORDER BY mode').all() as Row[]).map(x => x.mode), index: job };
   },
   search(input: SearchInput) {
@@ -135,7 +200,7 @@ const methods: Record<string, (input: any) => any> = {
     return { maps: rows.map(mapRow), total, page, pages: Math.ceil(total / limit) };
   },
   collections() {
-    return db.prepare('SELECT c.id,c.name,COUNT(cm.checksum) total,COUNT(CASE WHEN m.local=1 THEN 1 END) installed FROM collections c LEFT JOIN collection_members cm ON cm.collection_id=c.id LEFT JOIN maps m ON m.checksum=cm.checksum GROUP BY c.id ORDER BY c.name').all();
+    return db.prepare('SELECT c.id,c.name,COUNT(cm.checksum) total,COUNT(CASE WHEN m.local=1 THEN 1 END) installed FROM collections c LEFT JOIN collection_members cm ON cm.collection_id=c.id LEFT JOIN maps m ON m.checksum=cm.checksum WHERE c.source=? OR c.source=? GROUP BY c.id ORDER BY c.name').all(collectionSource(), legacyCollectionSource());
   },
   detail(key: string) {
     const row = db.prepare('SELECT * FROM maps WHERE checksum=?').get(key) as Row | undefined;
@@ -147,14 +212,16 @@ const methods: Record<string, (input: any) => any> = {
     if (!row) throw new Error('Map non installée.');
     const fields: Record<string, string> = { background: 'background_path', audio: 'audio_path', beatmap: 'file_path' };
     if (!fields[input.kind] || !row[fields[input.kind]]) throw new Error('Fichier indisponible.');
-    return { path: row[fields[input.kind]], folder: path.dirname(row.file_path) };
+    const names: Record<string, string> = { background: 'background_name', audio: 'audio_name' };
+    return { path: row[fields[input.kind]], folder: row.asset_root || path.dirname(row.file_path), name: input.kind === 'beatmap' ? 'beatmap.osu' : row[names[input.kind]] || path.basename(row[fields[input.kind]]) };
   },
   cover(key: string) { const row = db.prepare('SELECT cover FROM maps WHERE checksum=?').get(key) as Row | undefined; return row?.cover || null; },
-  index(input: { osuPath: string; songsPath: string }) {
+  index(input: LibrarySelection) {
     if (job.running) return job;
-    if (!input.osuPath && !input.songsPath) throw new Error('Configurer le dossier osu!stable dans les réglages.');
+    selectLibrary(input);
+    if (!activeLibrary.osuPath && !activeLibrary.songsPath) throw new Error(`Configurer le dossier de données osu!${input.client} dans les réglages.`);
     job = { running: true, phase: 'prepare', processed: 0, total: 0, errors: 0, message: 'Lecture de la bibliothèque…' }; progress();
-    void indexLibrary(input).catch(error => { job = { ...job, running: false, phase: 'error', message: error.message }; progress(); });
+    void (input.client === 'lazer' ? indexLazerLibrary(activeLibrary) : indexStableLibrary(activeLibrary)).catch(error => { job = { ...job, running: false, phase: 'error', message: error.message }; progress(); });
     return job;
   },
   plays() { return (db.prepare('SELECT * FROM plays ORDER BY started_at DESC LIMIT 100').all() as Row[]).map(playRow); },

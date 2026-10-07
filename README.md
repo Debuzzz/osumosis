@@ -2,55 +2,81 @@
 
 **Your next good play.** Un compagnon osu! lancé dans le terminal, avec une interface React sur localhost. Le nom mélange osu! et l’osmose : bibliothèque, jeu et analyses partagent le même catalogue.
 
-## Démarrage sous Windows
+## Prérequis et démarrage sous Windows
 
-```powershell
-cd C:\Users\natha\osumosis
-.\osumosis.ps1
+- Node.js LTS **22.12 ou plus récent**, avec npm, installé normalement sur le PC (version x64 conseillée).
+- Une bibliothèque osu!stable ou osu!lazer. Lazer est le profil sélectionné pour une nouvelle configuration.
+- Accès à `registry.npmjs.org`, à GitHub pour les binaires SQLite et à `static.realm.io` pour le module natif Realm pendant l’installation. Aucun runtime .NET ni Docker n’est requis.
+- tosu sur le même PC pour la télémétrie ; il n’est pas nécessaire pour parcourir une bibliothèque déjà indexée.
+
+Toutes les commandes fonctionnent dans l’Invite de commandes Windows (`cmd.exe`), sans script PowerShell :
+
+```bat
+cd C:\chemin\vers\osumosis
+npm ci
+npm run check:runtime
+npm run build
+npm start
 ```
 
-Ouvrir **http://127.0.0.1:3000**. Arrêter le service avec `Ctrl+C`.
+Ouvrir **http://127.0.0.1:3000**. Arrêter le service avec `Ctrl+C`, ou lancer `npm start -- stop` depuis un autre terminal.
 
-Si le service a été lancé en arrière-plan, `./osumosis.ps1 stop` demande son arrêt propre.
+`check:runtime` vérifie le chargement de SQLite, du moteur de calcul et de Realm. Certains installateurs de binaires natifs peuvent terminer sans avoir téléchargé leur module : une installation npm réussie seule ne suffit donc pas. Si Realm manque, vérifier l’accès HTTPS à `static.realm.io`, lancer `npm rebuild realm`, puis refaire cette vérification.
 
-Le lanceur utilise Node 22.12+ ; il repère aussi le runtime Node récent fourni avec Codex si le Node du système est trop ancien. Le nom logique du service et de la commande est `osumosis` ; Windows affiche toujours l’exécutable `node.exe` dans les outils qui utilisent le nom du binaire.
+Le service tourne directement sur le PC afin d’accéder aux fichiers du jeu et à tosu sur localhost. Un conteneur Docker imposerait des montages de volumes et un réseau différent pour la télémétrie Windows ; le workflow local reste basé sur npm.
 
-### Première configuration
+### Choisir stable ou lazer
 
-1. Ouvrir **Réglages**.
-2. Indiquer le dossier osu!stable contenant `osu!.db` et `collection.db`.
-3. Indiquer le dossier Songs uniquement s’il se trouve ailleurs.
-4. Enregistrer, puis indexer la bibliothèque.
-5. Lancer tosu pour activer la télémétrie et le journal des tentatives.
+1. Ouvrir **Réglages**, puis sélectionner **osu!lazer** ou **osu!stable**.
+2. Renseigner les dossiers du profil choisi. Chaque profil conserve ses chemins lorsque l’on bascule vers l’autre.
+3. Enregistrer, puis indexer le profil enregistré. Un changement de client ou de dossiers nécessite une nouvelle indexation : le cache est conservé, mais les anciennes maps ne sont plus considérées comme installées dans la bibliothèque sélectionnée.
+4. Lancer le jeu et tosu pour activer la télémétrie et le journal des tentatives.
 
-Adresse tosu initiale : `ws://127.0.0.1:24050/websocket/v2`.
+**Lazer** : choisir le dossier de **données**, généralement `%APPDATA%\osu` sous Windows, contenant `client.realm` (ou `client_<version>.realm`) et `files`. Utiliser le dossier effectivement choisi dans les réglages du jeu si le stockage a été déplacé. Fermer lazer avant chaque indexation, puis le relancer pour jouer. L’indexeur sélectionne la base client la plus récemment modifiée, en copie le contenu dans le stockage de l’application et ouvre uniquement cette copie en lecture seule. Il lit les maps, leurs médias et les collections via les références Realm ; les noms hashés seuls ne servent pas de preuve d’installation. Une évolution incompatible du schéma est signalée sans migration de la base du jeu. Les sets en attente de suppression sont exclus.
+
+La lecture directe lazer reste **expérimentale** jusqu’à validation sur une bibliothèque réelle Windows. Elle n’importe pas encore les scores historiques ni les replays. L’indexation lazer est manuelle, pour éviter de recopier automatiquement une base pendant que le jeu tourne.
+
+**Stable** : choisir le dossier contenant `osu!.db` et `collection.db`, et renseigner Songs seulement s’il se trouve ailleurs. La surveillance des fichiers stable reste disponible.
+
+Les anciennes configurations sans sélecteur sont migrées vers le profil stable, avec leurs chemins et préférences conservés. Lazer est le défaut pour les nouvelles configurations. Le choix du profil détermine aussi les règles des simulations de PP ; leurs caches stable et lazer sont séparés.
+
+L’adresse tosu initiale est `ws://127.0.0.1:24050/websocket/v2`. Les réglages tosu, OAuth et les préférences sont communs aux deux profils.
 
 La découverte en ligne nécessite le Client ID et le secret d’une application OAuth osu!. Ces champs sont facultatifs pour la bibliothèque locale. Ils sont conservés dans `.data/settings.json`, côté serveur ; le secret n’est pas renvoyé dans les réponses de réglages. Le fichier de configuration n’est pas chiffré : il utilise les permissions du compte Windows.
 
-## Commandes
+## Commandes npm
 
-```powershell
-.\osumosis.ps1 install # installer les dépendances
-.\osumosis.ps1 build   # compiler TypeScript, React et le serveur
-.\osumosis.ps1 dev     # Node sur :3000 et Vite sur :5173
-.\osumosis.ps1 start   # frontend compilé + API sur :3000
-.\osumosis.ps1 index 'D:\Games\osu!' # indexation ponctuelle, sans modifier les réglages
+```bat
+npm ci
+npm run check:runtime
+npm run build
+npm run dev
+npm start
+npm start -- stop
+npm run index -- --client lazer "C:\Users\ton_compte\AppData\Roaming\osu"
+npm run index -- --client stable "D:\Games\osu!"
+npm test
+npm run test:realm
 ```
 
-Avec un Node compatible dans le PATH, les scripts npm équivalents sont disponibles. Un port différent peut être choisi avec `OSUMOSIS_PORT` ; le proxy Vite de développement utilise le port 3000 par défaut. `OSUMOSIS_DATA` permet de déplacer le stockage de l’application.
+Sans `--client` ni chemin, la CLI utilise le profil enregistré. Les arguments ponctuels d’indexation ne modifient pas les réglages sauvegardés.
+
+`OSUMOSIS_PORT` permet de choisir un autre port ; le proxy Vite de développement utilise le port 3000 par défaut. `OSUMOSIS_DATA` permet de déplacer le stockage de l’application.
 
 ## Ce qui est implémenté dans la version 0.1
 
 - React, TypeScript, Vite, Fastify et serveur limité à `127.0.0.1`.
 - SQLite dans un worker dédié : index, recherche FTS5, collections, tentatives, calculs et découverte.
+- Profils stable/lazer, chemins indépendants et migration des anciens réglages.
 - Parsing `.osu`, lecture versionnée de `osu!.db`, import de `collection.db`.
+- Adaptateur lazer Realm en lecture seule sur copie, maps et médias hashés, collections ; validation Windows réelle à réaliser.
 - Indexation incrémentale par taille et date, surveillance des maps et bases locales.
 - Identité des difficultés par checksum ; conservation des versions et références de collections absentes.
 - Recherche, grille/listes, filtres, tri, pagination, regroupement des difficultés d’un set présentes dans les résultats.
 - Backgrounds et audio locaux, accès borné au dossier de la map, support des plages HTTP pour l’audio.
 - Fiche détaillée, liens vers osu!, autres difficultés, collections et tentatives.
 - Calculs rosu-pp-js dans des workers : étoiles avec mods, composantes de strain disponibles, scénarios à 95/97/98/99/100 %.
-- Cache des calculs par checksum, mods, règles stable et version du moteur.
+- Cache des calculs par checksum, mods, client stable/lazer et version du moteur.
 - Connexion tosu v2, reconnexion et dashboard live.
 - Journal des tentatives observées : résultats, fails, retries, abandons, interruptions et intervalles de misses/sliderbreaks.
 - Recherche officielle via OAuth client credentials, cinq requêtes maximum par minute, espacement de 12 secondes, curseurs et réutilisation du cache.
@@ -90,10 +116,10 @@ Les prédicats locaux sont retirés de la requête distante. Les résultats reç
 - Le journal commence quand le service reçoit la télémétrie. Il ne reconstruit pas les plays historiques et une tentative prise en cours peut être partielle.
 - Les misses et sliderbreaks sont des différences de compteurs sur un intervalle ; ce ne sont pas des coordonnées ou des IDs d’objets certains.
 - Le dashboard consomme le flux v2 normal. Le flux précis de touches/erreurs de timing reste une extension prévue.
-- Les calculs locaux utilisent les règles **stable**, y compris si la télémétrie provient de lazer. Ils sont clairement séparés des PP observés dans le jeu.
+- Les calculs locaux utilisent les règles du **profil sélectionné** (stable ou lazer). Ils restent distincts des PP observés via tosu. Les mods lazer avec des paramètres personnalisés ne sont pas encore pris en charge.
 - Le graphe de strain affiche des sections du calculateur ; l’alignement précis au replay et au premier objet reste à compléter.
 - La durée et le BPM parsés depuis `.osu` sont indicatifs, particulièrement avec des sliders longs ou plusieurs changements de tempo.
-- L’intégration directe à Realm/lazer et les exports ne sont pas encore implémentés.
+- La lecture Realm/lazer est implémentée mais reste à valider sur une bibliothèque réelle et ses versions de schéma. Les exports ne sont pas encore implémentés.
 - Les boutons `osu://` utilisent le gestionnaire de protocole du PC. La sélection exacte d’une difficulté dépend du client.
 - Les images locales peuvent être absentes ; la carte conserve un fond de remplacement. Une miniature absente en mode catalogue ne déclenche pas de téléchargement.
 
@@ -105,6 +131,7 @@ Les prédicats locaux sont retirés de la requête distante. Les résultats reç
   catalog.sqlite       # catalogue et analyses
   catalog.sqlite-wal   # journal SQLite
   covers/              # médias reproductibles, éviction à 256 Mio
+  snapshots/           # copies Realm temporaires, nettoyées après lecture
 ```
 
 Les métadonnées et tentatives ne sont pas effacées automatiquement. Les fichiers de jeu ne sont pas modifiés. Pour sauvegarder la base, arrêter d’abord le service puis copier `.data`.

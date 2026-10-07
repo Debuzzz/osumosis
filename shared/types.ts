@@ -1,4 +1,7 @@
 export type Source = 'local' | 'cached' | 'new' | 'all';
+export type OsuClient = 'stable' | 'lazer';
+export interface LibrarySelection { client: OsuClient; osuPath: string; songsPath: string }
+export interface DetectedLibraries { stable: string[]; lazer: string[] }
 export interface Beatmap {
   key: string; beatmapId: number | null; setId: number | null; checksum: string;
   title: string; artist: string; creator: string; version: string; mode: number;
@@ -11,10 +14,13 @@ export interface Beatmap {
 export interface SearchResult { maps: Beatmap[]; total: number; page: number; pages: number }
 export interface Collection { id: number; name: string; total: number; installed: number }
 export interface Settings {
-  osuPath: string; songsPath: string; tosuUrl: string; port: number;
+  client: OsuClient;
+  libraries: { stable: { osuPath: string; songsPath: string }; lazer: { osuPath: string } };
+  tosuUrl: string; port: number;
   clientId: string; clientSecret: string; targetStars: number; preferredMods: string;
 }
 export interface PublicSettings extends Omit<Settings, 'clientSecret'> { hasClientSecret: boolean }
+export interface SettingsResponse { settings: PublicSettings; detectedPaths: DetectedLibraries }
 export interface Job { running: boolean; phase: string; processed: number; total: number; errors: number; message: string; finishedAt?: string }
 export interface Status {
   maps: number; installed: number; sets: number; collections: number; plays: number;
@@ -35,7 +41,7 @@ export interface Play {
   ur: number; duration: number; events: PlayEvent[];
 }
 export interface Analysis {
-  checksum: string; mods: string; engine: string; stars: number; maxCombo: number;
+  checksum: string; mods: string; client: OsuClient; engine: string; stars: number; maxCombo: number;
   pp: { accuracy: number; pp: number }[];
   strains: { time: number; aim?: number; speed?: number; strain?: number }[];
 }
