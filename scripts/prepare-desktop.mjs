@@ -85,6 +85,9 @@ for (const folder of [
 ]) {
   await rm(path.join(backend, "node_modules/realm", folder), { recursive: true, force: true });
 }
+// WiX MSI defaults to Windows code page 1252; @fastify/send's test fixtures include a snowman
+// in a directory name, which WiX cannot encode. The tests are not needed by the runtime.
+await rm(path.join(backend, "node_modules/@fastify/send/test"), { recursive: true, force: true });
 await rm(path.join(backend, "dist"), { recursive: true, force: true });
 await cp(path.join(root, "dist"), path.join(backend, "dist"), { recursive: true });
 await mkdir(path.join(backend, "bin"), { recursive: true });
