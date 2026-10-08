@@ -1,6 +1,22 @@
 # osu!mosis
 
-**Your next good play.** Un compagnon osu! lancé dans le terminal, avec une interface React sur localhost. Le nom mélange osu! et l’osmose : bibliothèque, jeu et analyses partagent le même catalogue.
+**Your next good play.** Un compagnon local osu!, avec une interface React et une intégration desktop Tauri 2 en préparation pour la version 0.2. Le nom mélange osu! et l’osmose : bibliothèque, jeu et analyses partagent le même catalogue.
+
+## Application desktop (0.2 en préparation)
+
+Tauri utilise la WebView du système et conserve React/CSS. Le backend Node et ses modules natifs sont embarqués dans les futurs installateurs ; Node n’aura pas à être installé chez l’utilisateur final.
+
+Pour développer sous Windows, installer Node, Rust stable/Cargo, Visual Studio Build Tools avec les outils C++ et le SDK Windows, ainsi que WebView2. Fermer le serveur `npm start` avant de lancer :
+
+```bat
+npm ci
+npm run desktop:info
+npm run desktop:dev
+```
+
+`npm run desktop:build` prépare un installateur pour l’OS de la machine de build. Voir [docs/DESKTOP.md](docs/DESKTOP.md) pour les prérequis par OS, le stockage et la CI multi OS. La configuration est livrée ; la compilation Rust et les installateurs restent à valider sur des machines équipées. Aucune release exécutable n’est publiée par cette modification.
+
+Le menu Réglages reste en bas à gauche. Le bouton en haut à droite donne accès au profil osu!. Français et anglais sont disponibles dans les Réglages ; les [instructions de localisation](docs/LOCALIZATION.md) expliquent comment ajouter une langue. La version en bas de la barre latérale ouvre les notes de version ; [CHANGELOG.md](CHANGELOG.md) est la source des futures notes GitHub Releases.
 
 ## Prérequis et démarrage sous Windows
 
@@ -42,7 +58,16 @@ Les anciennes configurations sans sélecteur sont migrées vers le profil stable
 
 L’adresse tosu initiale est `ws://127.0.0.1:24050/websocket/v2`. Les réglages tosu, OAuth et les préférences sont communs aux deux profils.
 
-La découverte en ligne nécessite le Client ID et le secret d’une application OAuth osu!. Ces champs sont facultatifs pour la bibliothèque locale. Ils sont conservés dans `.data/settings.json`, côté serveur ; le secret n’est pas renvoyé dans les réponses de réglages. Le fichier de configuration n’est pas chiffré : il utilise les permissions du compte Windows.
+La découverte en ligne nécessite le Client ID et le secret d’une application OAuth osu!. Ces champs sont facultatifs pour la bibliothèque locale. Ils sont conservés dans `settings.json`, côté serveur ; le secret n’est pas renvoyé dans les réponses de réglages. Le fichier de configuration n’est pas chiffré : il utilise les permissions du compte Windows.
+
+### Relier son compte osu!
+
+1. Créer une application OAuth dans [les paramètres du compte osu!](https://osu.ppy.sh/home/account/edit#oauth).
+2. Enregistrer l’adresse de retour affichée dans les Réglages : par défaut `http://127.0.0.1:3000/api/account/callback`.
+3. Copier le Client ID et le secret dans osu!mosis, puis enregistrer.
+4. Cliquer sur le profil en haut à droite, puis **Autoriser sur osu!**. Valider les droits `public identify` sur le site osu!, puis revenir dans l’application.
+
+Le profil public est conservé en cache. La liaison utilisateur et la recherche de maps par client credentials sont deux flux distincts : la connexion au compte ne lance pas de découverte. L’import des tops et le farm personnalisé restent à développer. Voir [docs/OAUTH.md](docs/OAUTH.md) pour le stockage des tokens et la future distribution publique.
 
 ## Capture des plays et diagnostic tosu
 
@@ -143,15 +168,19 @@ Les prédicats locaux sont retirés de la requête distante. Les résultats reç
 
 ## Stockage
 
+En mode navigateur/npm, les fichiers sont dans `.data` (ou `OSUMOSIS_DATA`). Tauri utilise son répertoire d’application, distinct du dépôt : voir [docs/DESKTOP.md](docs/DESKTOP.md).
+
 ```text
 .data/
   settings.json        # configuration locale, secret OAuth exclu de Git
+  account.json         # tokens OAuth utilisateur et profil en cache, hors Git
   catalog.sqlite       # catalogue et analyses
   catalog.sqlite-wal   # journal SQLite
   covers/              # médias reproductibles, éviction à 256 Mio
   snapshots/           # copies Realm temporaires, nettoyées après lecture
   tosu.log             # événements de capture (rotation à 512 Kio)
   tosu.log.1           # journal précédent
+  desktop-backend.log  # sortie du processus compagnon en mode Tauri
 ```
 
 Les métadonnées et tentatives ne sont pas effacées automatiquement. Les fichiers de jeu ne sont pas modifiés. Pour sauvegarder la base, arrêter d’abord le service puis copier `.data`.

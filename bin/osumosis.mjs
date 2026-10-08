@@ -9,12 +9,12 @@ process.title = 'osumosis';
 if (process.argv[2] === 'stop') {
   const runtime = path.resolve(process.env.OSUMOSIS_DATA || '.data', 'service.json');
   try {
-    const { port } = JSON.parse(readFileSync(runtime, 'utf8'));
+    const { port, instance } = JSON.parse(readFileSync(runtime, 'utf8'));
     const origin = `http://127.0.0.1:${Number(port)}`;
     const response = await fetch(origin + '/api/status', { signal: AbortSignal.timeout(5000) });
     const status = await response.json();
     if (status.app !== 'osumosis') throw new Error('Ce port ne correspond pas à osu!mosis.');
-    const stop = await fetch(origin + '/api/shutdown', { method: 'POST', headers: { 'X-osumosis': '1', 'Content-Type': 'application/json' }, body: '{}', signal: AbortSignal.timeout(5000) });
+    const stop = await fetch(origin + '/api/shutdown', { method: 'POST', headers: { 'X-osumosis': '1', 'Content-Type': 'application/json', ...(instance ? { 'X-osumosis-instance': instance } : {}) }, body: '{}', signal: AbortSignal.timeout(5000) });
     if (!stop.ok) throw new Error('Arrêt refusé par le service.');
     console.log('osu!mosis : arrêt demandé.');
   } catch (error) { console.error('osu!mosis :', error.message); process.exitCode = 1; }

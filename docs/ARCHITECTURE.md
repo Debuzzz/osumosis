@@ -1,4 +1,4 @@
-# Architecture de la version 0.1
+# Architecture — 0.1 et intégration desktop 0.2
 
 ## Modules
 
@@ -20,6 +20,8 @@
 
 `osu-api.ts` utilise un token public obtenu par client credentials. Le budget compte les appels de recherche officiels ; l’obtention ponctuelle d’un token OAuth est une opération d’authentification séparée. Les requêtes identiques en cours sont mutualisées et les curseurs persistés.
 
+`account.ts` gère séparément le flux OAuth utilisateur `public identify` : state aléatoire à usage unique, expiration, échange du code, renouvellement et snapshot public de `/api/v2/me`. Le backend sérialise les écritures atomiques de `account.json` et invalide les travaux en cours lors d’une déconnexion. Les tokens ne sont jamais inclus dans `AccountStatus`. Le callback notifie le frontend par `account-changed` ; le polling pendant l’autorisation permet aussi de retrouver le statut après une coupure du WebSocket. Les tops et le moteur de farm personnel restent à réaliser.
+
 `assets.ts` gère les miniatures depuis `assets.ppy.sh`, dans une file séparée espacée de 500 ms. Les réponses sont bornées à 2 Mio et le cache reproductible à 256 Mio. Le mode catalogue autorise seulement les lectures du cache ; la découverte et l’ouverture d’une fiche peuvent le remplir.
 
 ## Identité et disponibilité
@@ -36,6 +38,9 @@ Le scan désactive les références aux fichiers disparus uniquement après une 
 | --- | --- |
 | `GET /api/status` | Catalogue, index, tosu, budget API |
 | `GET /api/settings`, `PUT /api/settings` | Configuration publique / sauvegarde |
+| `GET /api/account` | Profil en cache et état de liaison, sans tokens |
+| `POST /api/account/connect`, `GET /api/account/callback` | Autorisation utilisateur et retour OAuth local |
+| `POST /api/account/refresh`, `POST /api/account/disconnect` | Actualisation du profil / suppression locale des tokens |
 | `GET /api/maps`, `GET /api/maps/:key` | Recherche et fiche |
 | `GET /api/collections` | Membres connus et installés |
 | `POST /api/index` | Démarrer l’indexation |
@@ -56,6 +61,18 @@ Le frontend utilise React Query pour le catalogue et un WebSocket avec reconnexi
 Les scénarios PP sont des simulations sans miss avec les règles du profil sélectionné. Les mods paramétrés lazer ne sont pas encore disponibles. Le graphe de strain est indexé par sections du moteur : son alignement temporel exact à une lecture de replay n’est pas encore livré.
 
 Le service limite Host/Origin aux adresses locales, exige un en-tête spécifique pour les mutations et vérifie les chemins réels des médias. Ces contrôles servent le périmètre d’une application locale ; aucun accès LAN ou authentification multi-utilisateur n’est fourni.
+
+Les textes statiques de l’interface sont externalisés dans `src/locales`, via i18next. Le choix de langue est enregistré dans le stockage local de la WebView/navigateur ; il suit `html.lang` et les formats régionaux. Les dialogs de profil, notes et détails utilisent `<dialog>` pour la gestion du focus et d’Échap. La barre latérale devient un panneau ouvrable sur les petites fenêtres, avec le contenu fermé rendu `inert`.
+
+## Fenêtre Tauri et packaging
+
+`src-tauri/src/main.rs` lance un sidecar Node dont la version correspond aux modules natifs de la machine de build. Il fournit un répertoire de données Tauri, réserve le port 3000, attend un marqueur `service.json` portant l’identifiant unique de cette instance puis ouvre la WebView sur le serveur local. La fermeture demande l’arrêt gracieux avec ce même identifiant, attend le nettoyage et termine le processus si nécessaire. La sortie Node est conservée dans `desktop-backend.log` avec rotation.
+
+`scripts/prepare-desktop.mjs` assemble `.desktop/backend`, ses dépendances de production, les workers et le frontend compilé. Il préserve les licences et le binding Node Realm, et retire les bibliothèques mobiles inutilisées de cette copie. Il vérifie le chargement des modules natifs avec le runtime copié. Chaque cible doit être construite sur son OS/CPU : aucune compilation croisée des dépendances Node n’est fournie.
+
+Les capacités Tauri autorisent uniquement l’ouverture de liens externes osu!/GitHub/tosu depuis la fenêtre locale. Le frontend n’a pas de permission shell. `src/desktop.ts` ouvre ces liens dans le navigateur système ou le client osu!. La fenêtre refuse une navigation vers une autre origine. Tauri conserve une interface HTML/CSS rendue par la WebView du système ; il ne remplace pas React par des contrôles graphiques natifs.
+
+Le workflow desktop prépare les builds et les brouillons GitHub Releases. La compilation native, le fonctionnement des installateurs et l’OAuth réel nécessitent encore une validation sur les machines cibles ; la signature et l’updater ne sont pas configurés. Voir `docs/DESKTOP.md`, `docs/OAUTH.md` et `CHANGELOG.md`.
 
 ## Médias et validation
 

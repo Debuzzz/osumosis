@@ -1,0 +1,59 @@
+name: Desktop builds
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  desktop:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            label: linux-x64
+          - os: windows-latest
+            label: windows-x64
+          - os: macos-14
+            label: macos
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - name: Install Linux libraries
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libxdo-dev libssl-dev librsvg2-dev patchelf
+      - run: npm ci --no-audit --no-fund
+      - name: Prepare release notes
+        run: node scripts/release-notes.mjs --github
+      - name: Build application and draft release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'osu!mosis ${{ github.ref_name }}'
+          releaseBody: ${{ env.OSUMOSIS_RELEASE_NOTES }}
+          releaseDraft: true
+          prerelease: false
+      - name: Build application without publishing
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+        run: npm run desktop:build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: osumosis-${{ matrix.label }}
+          path: |
+            src-tauri/target/release/bundle/**
+          if-no-files-found: error

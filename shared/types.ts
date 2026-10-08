@@ -2,6 +2,8 @@ export type Source = 'local' | 'cached' | 'new' | 'all';
 export type OsuClient = 'stable' | 'lazer';
 export interface LibrarySelection { client: OsuClient; osuPath: string; songsPath: string }
 export interface DetectedLibraries { stable: string[]; lazer: string[] }
+export interface AccountProfile { id: number; username: string; avatarUrl: string | null; countryCode: string; playmode: string; pp: number | null; globalRank: number | null }
+export interface AccountStatus { configured: boolean; connected: boolean; pending: boolean; profile: AccountProfile | null; updatedAt: string | null; redirectUri: string; error: string | null }
 export interface Beatmap {
   key: string; beatmapId: number | null; setId: number | null; checksum: string;
   title: string; artist: string; creator: string; version: string; mode: number;

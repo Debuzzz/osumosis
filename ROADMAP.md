@@ -14,7 +14,8 @@
 
 ## Profil et recommandations personnalisées
 
-- [ ] OAuth utilisateur `public identify` avec callback local, state et refresh token.
+- [x] OAuth utilisateur `public identify` avec callback local, state et refresh token ; profil public en cache.
+- [ ] Valider le flux OAuth avec un compte réel et préparer l’authentification de la distribution publique (sans secret embarqué).
 - [ ] Snapshots des tops, scores récents et profil par ruleset ; cache partagé.
 - [ ] Import versionné de `scores.db`, sans supposer qu’il contient les frames de replay.
 - [ ] Profil par mode, mods/vitesse, caractéristiques et performances comparables.
@@ -71,7 +72,22 @@
 - [ ] Commande de recommandation dans la CLI.
 - [ ] Tableau de diagnostic des capacités, quotas, appels API, cache et fraîcheur.
 - [ ] Reprise des travaux, migrations et limites de caches reproductibles.
-- [ ] Installation indépendante du runtime Codex et packaging Windows.
+- [x] Configuration Tauri 2, runtime Node compagnon et ressources natives préparés pour l’OS de build.
+- [x] Workflow GitHub Actions Windows/macOS/Linux, artefacts manuels et release en brouillon sur tag.
+- [ ] Compiler et essayer les installateurs sur les OS cibles ; versionner le premier Cargo.lock validé.
+- [ ] Signature Windows, notarisation macOS et stratégie de mises à jour.
+
+## Interface et distribution (0.2 en préparation)
+
+- [x] Un seul accès principal aux Réglages, profil osu! en haut à droite.
+- [x] Navigation compacte, focus visible, lien d’évitement, dialogs natifs et prise en compte du mouvement réduit.
+- [x] Base de localisation i18next, français/anglais et choix de langue persistant.
+- [x] CHANGELOG suivant Keep a Changelog, notes dans l’app et génération des notes de release.
+- [ ] Audit visuel et clavier sur les WebViews réelles, contrastes et libellés longs.
+- [ ] Traduction structurée des erreurs métier du backend et prise en charge RTL.
+- [ ] Fusion bibliothèque/recommandations, filtres de mods et farm fondé sur les gains de PP.
+- [ ] Widgets personnalisables pour En direct et regroupement des erreurs rapprochées dans les analyses.
+- [ ] Éditeur de thème CSS dans les Réglages, aperçu et restauration du thème par défaut.
 
 ## Validation à réaliser quand demandée
 
