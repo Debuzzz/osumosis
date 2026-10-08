@@ -1,0 +1,16 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "main",
+  "description": "Local UI can open approved links. Backend launch is handled in Rust, never by web content.",
+  "windows": ["main"],
+  "remote": { "urls": ["http://127.0.0.1:3000/*"] },
+  "permissions": [
+    "core:default",
+    { "identifier": "opener:allow-open-url", "allow": [
+      { "url": "https://osu.ppy.sh/*" },
+      { "url": "https://github.com/Debuzzz/osumosis/*" },
+      { "url": "https://tosu.app/*" },
+      { "url": "osu://b/*" }
+    ] }
+  ]
+}

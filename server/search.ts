@@ -1,8 +1,9 @@
 import type { Source } from '../shared/types';
+import { searchTokens, searchValue } from '../shared/search-query';
 
 const numericFields: Record<string, string> = { stars: 'm.stars', difficulty: 'm.stars', bpm: 'm.bpm', length: 'm.length', ar: 'm.ar', od: 'm.od', cs: 'm.cs', hp: 'm.hp', objects: 'm.objects', plays: 'm.play_count', mode: 'm.mode', id: 'm.beatmap_id' };
 const textFields: Record<string, string> = { artist: 'm.artist', title: 'm.title', creator: 'm.creator', mapper: 'm.creator', version: 'm.version', tag: 'm.tags', tags: 'm.tags', source: 'm.source' };
-export interface SearchInput { q?: string; source?: Source; mode?: string; status?: string; collection?: string; sort?: string; page?: number; limit?: number }
+export interface SearchInput { q?: string; source?: Source; mode?: string; status?: string; collection?: string; sort?: string; page?: number; limit?: number; group?: 'maps' | 'sets' }
 export function compileSearch(input: SearchInput) {
   const where: string[] = []; const params: (string | number)[] = [];
   if (!input.source || input.source === 'local') where.push('m.local = 1');
@@ -10,10 +11,10 @@ export function compileSearch(input: SearchInput) {
   if (input.mode && input.mode !== 'any') { where.push('m.mode = ?'); params.push(Number(input.mode)); }
   if (input.status && input.status !== 'any') { where.push('m.status = ?'); params.push(input.status); }
   if (input.collection) { where.push('EXISTS (SELECT 1 FROM collection_members cm WHERE cm.checksum=m.checksum AND cm.collection_id=?)'); params.push(Number(input.collection)); }
-  const tokens = (input.q || '').match(/(?:[^\s"']|"[^"]*"|'[^']*')+/g) || [];
+  const tokens = searchTokens(input.q || '');
   for (const token of tokens) {
     const comparison = token.match(/^([a-zA-Z_]+)(>=|<=|!=|=|>|<|:)(.*)$/);
-    const unquote = (v: string) => v.replace(/^["']|["']$/g, '');
+    const unquote = searchValue;
     if (!comparison) {
       const term = unquote(token);
       where.push('m.rowid IN (SELECT rowid FROM maps_fts WHERE maps_fts MATCH ?)');

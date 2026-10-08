@@ -1,6 +1,22 @@
 # osu!mosis
 
-**Your next good play.** Un compagnon osu! lancé dans le terminal, avec une interface React sur localhost. Le nom mélange osu! et l’osmose : bibliothèque, jeu et analyses partagent le même catalogue.
+**Your next good play.** Un compagnon local osu!, avec une interface React et une intégration desktop Tauri 2 en préparation pour la version 0.2. Le nom mélange osu! et l’osmose : bibliothèque, jeu et analyses partagent le même catalogue.
+
+## Application desktop (0.2 en préparation)
+
+Tauri utilise la WebView du système et conserve React/CSS. Le backend Node et ses modules natifs sont embarqués dans les futurs installateurs ; Node n’aura pas à être installé chez l’utilisateur final.
+
+Pour développer sous Windows, installer Node, Rust stable/Cargo, Visual Studio Build Tools avec les outils C++ et le SDK Windows, ainsi que WebView2. Fermer le serveur `npm start` avant de lancer :
+
+```bat
+npm ci
+npm run desktop:info
+npm run desktop:dev
+```
+
+`npm run desktop:build` prépare un installateur pour l’OS de la machine de build. Voir [docs/DESKTOP.md](docs/DESKTOP.md) pour les prérequis par OS, le stockage et la CI multi OS. La configuration est livrée ; la compilation Rust et les installateurs restent à valider sur des machines équipées. Aucune release exécutable n’est publiée par cette modification.
+
+Le menu Réglages reste en bas à gauche. Le bouton en haut à droite donne accès au profil osu!. Français et anglais sont disponibles dans les Réglages ; les [instructions de localisation](docs/LOCALIZATION.md) expliquent comment ajouter une langue. La version en bas de la barre latérale ouvre les notes de version ; [CHANGELOG.md](CHANGELOG.md) est la source des futures notes GitHub Releases.
 
 ## Prérequis et démarrage sous Windows
 
@@ -42,7 +58,38 @@ Les anciennes configurations sans sélecteur sont migrées vers le profil stable
 
 L’adresse tosu initiale est `ws://127.0.0.1:24050/websocket/v2`. Les réglages tosu, OAuth et les préférences sont communs aux deux profils.
 
-La découverte en ligne nécessite le Client ID et le secret d’une application OAuth osu!. Ces champs sont facultatifs pour la bibliothèque locale. Ils sont conservés dans `.data/settings.json`, côté serveur ; le secret n’est pas renvoyé dans les réponses de réglages. Le fichier de configuration n’est pas chiffré : il utilise les permissions du compte Windows.
+La découverte en ligne nécessite le Client ID et le secret d’une application OAuth osu!. Ces champs sont facultatifs pour la bibliothèque locale. Ils sont conservés dans `settings.json`, côté serveur ; le secret n’est pas renvoyé dans les réponses de réglages. Le fichier de configuration n’est pas chiffré : il utilise les permissions du compte Windows.
+
+### Relier son compte osu!
+
+1. Créer une application OAuth dans [les paramètres du compte osu!](https://osu.ppy.sh/home/account/edit#oauth).
+2. Enregistrer l’adresse de retour affichée dans les Réglages : par défaut `http://127.0.0.1:3000/api/account/callback`.
+3. Copier le Client ID et le secret dans osu!mosis, puis enregistrer.
+4. Cliquer sur le profil en haut à droite, puis **Autoriser sur osu!**. Valider les droits `public identify` sur le site osu!, puis revenir dans l’application.
+
+Le profil public est conservé en cache. La liaison utilisateur et la recherche de maps par client credentials sont deux flux distincts : la connexion au compte ne lance pas de découverte. L’import des tops et le farm personnalisé restent à développer. Voir [docs/OAUTH.md](docs/OAUTH.md) pour le stockage des tokens et la future distribution publique.
+
+## Capture des plays et diagnostic tosu
+
+**Tes plays** regroupe le direct et l’historique. Le mode **Automatique** montre la partie, la pause ou le replay courant et reste sur le résultat jusqu’au retour au menu, puis retrouve l’historique et sélectionne la nouvelle tentative sauvegardée. Ce suivi agit dans cette vue : il ne change pas de page pendant que l’on consulte la bibliothèque ou les Réglages. **Historique** et **En direct** permettent de choisir manuellement l’affichage, même pendant une partie.
+
+Une tentative sélectionnée reprend les mêmes widgets de score que le direct. La chronologie (accuracy ou PP) et les erreurs sont côte à côte sur une grande fenêtre ; la map et le score se trouvent dessous. Les erreurs d’une même seconde sont regroupées, avec une seule ligne et un seul repère, en conservant le nombre de misses et de sliderbreaks. Sur une petite fenêtre, les panneaux se replacent en une colonne.
+
+Les nouvelles captures conservent les compteurs, le rang, le score total, les statistiques de map et les scénarios PP disponibles auprès de tosu. Les anciennes restent lisibles, sans reconstruire les champs qui n’avaient pas été enregistrés : ils affichent `—`. Il s’agit de télémétrie sauvegardée ; le lecteur de frames `.osr` reste à réaliser. Les replays reconnus restent visibles en direct sans créer de tentative ; leurs événements d’erreur ne sont pas encore capturés par ce flux.
+
+Les parties observées sont sauvegardées à leur fin (résultat, fail, retry, abandon ou interruption). Le service attend au moins 350 ms et des valeurs cohérentes au départ, car tosu peut encore publier le temps de prévisualisation et les compteurs de la partie précédente après être passé en état play. Un retour du temps sans activité de jeu observée ne crée pas de retry. Le service attend ensuite brièvement les dernières valeurs de l’écran de résultat. Une capture commencée au milieu de la map est marquée partielle ; les premières misses déjà présentes ne sont pas inventées comme nouveaux événements.
+
+`settings.replayUIVisible` est une préférence d’interface, pas un indicateur de lecture replay. osu!mosis ouvre en plus le flux `/tokens` de la même instance tosu pour lire son statut StreamCompanion : `2` = partie, `8` = lecture replay. Si ce flux manque, l’interface et les captures portent la mention « mode non confirmé ». Les replays reconnus restent visibles dans En direct, y compris les valeurs de leur écran de résultat, et ne créent pas de tentative jouée. L’import de scores historiques/replays reste une fonctionnalité distincte à réaliser.
+
+Le panneau **Diagnostic de capture tosu**, présent dans Tes plays et Réglages, affiche les messages reçus, les sauvegardes, les transitions et les erreurs. Les événements sont également écrits dans le terminal et dans `.data/tosu.log`, avec rotation vers `.data/tosu.log.1` à 512 Kio. Le journal ne contient pas les payloads complets ni les réglages OAuth. Le nombre de sauvegardes dans le diagnostic couvre le démarrage actuel ; le total historique est celui de Tes plays.
+
+Pour fournir un instantané de télémétrie, ouvrir `http://127.0.0.1:24050/json/v2` dans un navigateur, puis actualiser pendant une partie et sur le résultat. Retirer les noms et chemins personnels avant de partager le JSON. Le journal peut aussi se lire dans l’Invite de commandes :
+
+```bat
+type .data\tosu.log
+```
+
+Le fond de map est lu en priorité dans l’index local ; en cas d’absence, osu!mosis tente le fond courant servi par tosu. Aucun téléchargement de couverture distante n’est déclenché par En direct.
 
 ## Commandes npm
 
@@ -72,12 +119,12 @@ Sans `--client` ni chemin, la CLI utilise le profil enregistré. Les arguments p
 - Adaptateur lazer Realm en lecture seule sur copie, maps et médias hashés, collections ; validation Windows réelle à réaliser.
 - Indexation incrémentale par taille et date, surveillance des maps et bases locales.
 - Identité des difficultés par checksum ; conservation des versions et références de collections absentes.
-- Recherche, grille/listes, filtres, tri, pagination, regroupement des difficultés d’un set présentes dans les résultats.
+- Recherche, grille/listes, filtres et tri ; chargement au scroll par lots de 20 sets, avec toutes leurs difficultés correspondant aux filtres.
 - Backgrounds et audio locaux, accès borné au dossier de la map, support des plages HTTP pour l’audio.
 - Fiche détaillée, liens vers osu!, autres difficultés, collections et tentatives.
 - Calculs rosu-pp-js dans des workers : étoiles avec mods, composantes de strain disponibles, scénarios à 95/97/98/99/100 %.
 - Cache des calculs par checksum, mods, client stable/lazer et version du moteur.
-- Connexion tosu v2, reconnexion et dashboard live.
+- Connexion tosu v2 avec statut partie/replay via `/tokens`, reconnexion et dashboard live : fond local, compteurs compacts, graphe des PP et scénarios transmis par tosu.
 - Journal des tentatives observées : résultats, fails, retries, abandons, interruptions et intervalles de misses/sliderbreaks.
 - Recherche officielle via OAuth client credentials, cinq requêtes maximum par minute, espacement de 12 secondes, curseurs et réutilisation du cache.
 - Conservation des métadonnées des découvertes sans installation dans le jeu.
@@ -91,6 +138,7 @@ stars>=5 stars<6.5 bpm>180 length<180
 creator="Sotarks" status=r,l
 collection:"DT farm" played=false
 artist="Camellia" local=true
+tags="stream" source="Touhou" creator="Sotarks"
 ```
 
 Les mots libres utilisent l’index plein texte. Les mots successifs et contraintes sont combinés avec AND. Les champs texte sont insensibles à la casse ASCII ; la recherche libre retire aussi les accents.
@@ -99,7 +147,11 @@ Champs numériques : `stars`, `difficulty`, `bpm`, `length` (secondes), `ar`, `o
 
 Champs texte : `artist`, `title`, `creator`, `mapper`, `version`, `tag`, `tags`, `source`.
 
+Les filtres avancés exposent les tags, la source du morceau, le mapper et le nom de difficulté. Leurs valeurs sont ajoutées à la barre de recherche ; elles sont aussi disponibles dans les recommandations. Tags et source sont affichés dans la fiche de map. Ils viennent du fichier `.osu` ou du cache des découvertes, sans nouvel appel pour filtrer. `tags="stream jump"` cherche cette phrase ; utiliser `tag=stream tag=jump` pour exiger les deux termes séparément. Ces métadonnées ne garantissent pas les patterns réels ni un potentiel de farm.
+
 Autres : `status`, `collection`, `local`, `played`. Les valeurs inconnues de difficulté ne sont pas assimilées à zéro. Les filtres de PP, UR et replays ne sont pas encore disponibles ; ils produisent une erreur explicite plutôt qu’un résultat incorrect.
+
+La bibliothèque affiche 20 cartes de sets au départ, puis en ajoute 20 à l’approche du bas de la liste. Les résultats déjà affichés restent disponibles ; un bouton permet aussi de charger la suite ou de réessayer. Les changements de recherche, filtres, collection ou tri sélectionnent une nouvelle liste. Le scroll consulte uniquement SQLite, y compris dans Découvrir : les appels osu! restent déclenchés par les boutons explicites.
 
 ### Sources
 
@@ -107,7 +159,7 @@ Autres : `status`, `collection`, `local`, `played`. Les valeurs inconnues de dif
 - **Catalogue** : toutes les métadonnées déjà enregistrées ; aucun nouvel appel API.
 - **Découvrir** : maps non installées. Le bouton de recherche déclenche explicitement un appel osu!, puis le catalogue applique les filtres locaux.
 
-Les prédicats locaux sont retirés de la requête distante. Les résultats reçus restent en base ; le moteur ne prétend pas avoir filtré tout le catalogue en ligne avec une contrainte locale. « Page suivante » poursuit le curseur officiel. Les recherches initiales identiques sont réutilisées pendant 15 minutes.
+Les prédicats locaux sont retirés de la requête distante. Les résultats reçus restent en base ; le moteur ne prétend pas avoir filtré tout le catalogue en ligne avec une contrainte locale. « Découvrir davantage » poursuit le curseur officiel. Les recherches initiales identiques sont réutilisées pendant 15 minutes.
 
 ## Limites actuelles
 
@@ -125,13 +177,19 @@ Les prédicats locaux sont retirés de la requête distante. Les résultats reç
 
 ## Stockage
 
+En mode navigateur/npm, les fichiers sont dans `.data` (ou `OSUMOSIS_DATA`). Tauri utilise son répertoire d’application, distinct du dépôt : voir [docs/DESKTOP.md](docs/DESKTOP.md).
+
 ```text
 .data/
   settings.json        # configuration locale, secret OAuth exclu de Git
+  account.json         # tokens OAuth utilisateur et profil en cache, hors Git
   catalog.sqlite       # catalogue et analyses
   catalog.sqlite-wal   # journal SQLite
   covers/              # médias reproductibles, éviction à 256 Mio
   snapshots/           # copies Realm temporaires, nettoyées après lecture
+  tosu.log             # événements de capture (rotation à 512 Kio)
+  tosu.log.1           # journal précédent
+  desktop-backend.log  # sortie du processus compagnon en mode Tauri
 ```
 
 Les métadonnées et tentatives ne sont pas effacées automatiquement. Les fichiers de jeu ne sont pas modifiés. Pour sauvegarder la base, arrêter d’abord le service puis copier `.data`.

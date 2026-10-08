@@ -78,13 +78,13 @@ function mapRow(row: Row): Beatmap {
     title: row.title, artist: row.artist, creator: row.creator, version: row.version, mode: row.mode,
     status: row.status, stars: row.stars, bpm: row.bpm, length: row.length, ar: row.ar, od: row.od, cs: row.cs, hp: row.hp,
     objects: row.objects, local: !!row.local, hasBackground: !!row.local && !!row.background_path, cover: row.cover,
-    played: !!row.played, lastPlayed: row.last_played, playCount: row.play_count, tags: row.tags,
+    played: !!row.played, lastPlayed: row.last_played, playCount: row.play_count, tags: row.tags, source: row.source,
     collections: (collectionNames.all(row.checksum, collectionSource(), legacyCollectionSource()) as Row[]).map(v => v.name),
   };
 }
 function playRow(row: Row): Play {
   const info = JSON.parse(row.map_info);
-  return { id: row.id, checksum: row.checksum, title: info.title || 'Map inconnue', artist: info.artist || '', version: info.version || '', startedAt: row.started_at, endedAt: row.ended_at, outcome: row.outcome, mods: row.mods, client: row.client, accuracy: row.accuracy, combo: row.combo, misses: row.misses, sliderBreaks: row.slider_breaks, pp: row.pp, ur: row.ur, duration: row.duration, events: JSON.parse(row.events) };
+  return { id: row.id, checksum: row.checksum, title: info.title || 'Map inconnue', artist: info.artist || '', version: info.version || '', partial: !!info.partial, sourceConfirmed: info.sourceConfirmed, snapshot: info.snapshot, startedAt: row.started_at, endedAt: row.ended_at, outcome: row.outcome, mods: row.mods, client: row.client, accuracy: row.accuracy, combo: row.combo, misses: row.misses, sliderBreaks: row.slider_breaks, pp: row.pp, ur: row.ur, duration: row.duration, events: JSON.parse(row.events) };
 }
 async function* walk(folder: string): AsyncGenerator<string> {
   const entries = await readdir(folder, { withFileTypes: true });
@@ -196,6 +196,22 @@ const methods: Record<string, (input: any) => any> = {
   search(input: SearchInput) {
     const query = compileSearch(input); const limit = Math.max(1, Math.min(100, input.limit || 48)); const page = Math.max(1, input.page || 1);
     const total = (db.prepare(`SELECT COUNT(*) n FROM maps m WHERE ${query.clause}`).get(...query.params) as Row).n;
+    if (input.group === 'sets') {
+      const totalSets = (db.prepare(`SELECT COUNT(DISTINCT m.set_key) n FROM maps m WHERE ${query.clause}`).get(...query.params) as Row).n;
+      // Order each set by its first matching difficulty under the requested sort.
+      const sets = db.prepare(`SELECT m.set_key FROM (
+        SELECT m.*, ROW_NUMBER() OVER (PARTITION BY m.set_key ORDER BY ${query.order},m.checksum) AS position
+        FROM maps m WHERE ${query.clause}
+      ) m WHERE m.position=1 ORDER BY ${query.order},m.checksum LIMIT ? OFFSET ?`).all(...query.params, limit, (page - 1) * limit) as Row[];
+      const grouped = new Map<string, Beatmap[]>(sets.map(row => [row.set_key, []]));
+      if (sets.length) {
+        const rows = db.prepare(`SELECT m.* FROM maps m WHERE ${query.clause}
+          AND m.set_key IN (${sets.map(() => '?').join(',')}) ORDER BY ${query.order},m.checksum`).all(...query.params, ...sets.map(row => row.set_key)) as Row[];
+        for (const row of rows) grouped.get(row.set_key)!.push(mapRow(row));
+      }
+      const groups = [...grouped.values()];
+      return { maps: groups.flat(), groups, total, totalSets, page, pages: Math.ceil(totalSets / limit) };
+    }
     const rows = db.prepare(`SELECT m.* FROM maps m WHERE ${query.clause} ORDER BY ${query.order},m.checksum LIMIT ? OFFSET ?`).all(...query.params, limit, (page - 1) * limit) as Row[];
     return { maps: rows.map(mapRow), total, page, pages: Math.ceil(total / limit) };
   },
@@ -226,7 +242,7 @@ const methods: Record<string, (input: any) => any> = {
   },
   plays() { return (db.prepare('SELECT * FROM plays ORDER BY started_at DESC LIMIT 100').all() as Row[]).map(playRow); },
   savePlay(input: Omit<Play, 'id'>) {
-    const info = JSON.stringify({ title: input.title, artist: input.artist, version: input.version });
+    const info = JSON.stringify({ title: input.title, artist: input.artist, version: input.version, partial: !!input.partial, sourceConfirmed: input.sourceConfirmed, snapshot: input.snapshot });
     const row = db.prepare('INSERT INTO plays(checksum,started_at,ended_at,outcome,mods,client,accuracy,combo,misses,slider_breaks,pp,ur,duration,events,map_info) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)').run(input.checksum, input.startedAt, input.endedAt, input.outcome, input.mods, input.client, input.accuracy, input.combo, input.misses, input.sliderBreaks, input.pp, input.ur, input.duration, JSON.stringify(input.events), info);
     db.prepare('UPDATE maps SET played=1,last_played=?,play_count=play_count+1 WHERE checksum=?').run(input.endedAt, input.checksum);
     return Number(row.lastInsertRowid);

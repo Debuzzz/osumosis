@@ -41,10 +41,11 @@ export async function openLazerLibrary(folder: string, cacheDir: string) {
     try { Realm = (await import('realm')).default; }
     catch { throw new Error('Module natif Realm indisponible. Autoriser static.realm.io pour l’installation, puis lancer npm rebuild realm.'); }
     realm = new Realm({ path: snapshot, readOnly: true });
-    const required = { Beatmap: ['Hash', 'MD5Hash', 'BeatmapSet', 'StarRating', 'Status'], BeatmapSet: ['Files', 'DeletePending'], RealmNamedFileUsage: ['Filename', 'File'], RealmFile: ['Hash'], BeatmapCollection: ['Name', 'BeatmapMD5Hashes'] };
+    // osu! maps the C# RealmFile class to the persisted table name "File".
+    const required = { Beatmap: ['Hash', 'MD5Hash', 'BeatmapSet', 'StarRating', 'Status'], BeatmapSet: ['Files', 'DeletePending'], RealmNamedFileUsage: ['Filename', 'File'], File: ['Hash'], BeatmapCollection: ['Name', 'BeatmapMD5Hashes'] };
     for (const [name, properties] of Object.entries(required)) {
       const schema = realm.schema.find(item => item.name === name);
-      if (!schema || properties.some(property => !(property in schema.properties))) throw new Error(`Schéma lazer ${realm.schemaVersion} non pris en charge : ${name}. Aucun fichier du jeu n’a été modifié.`);
+      if (!schema || properties.some(property => !(property in schema.properties))) throw new Error(`Schéma lazer ${realm.schemaVersion} non pris en charge : ${name}. Aucun fichier du jeu n’a été modifié`);
     }
     return {
       file: source, version: realm.schemaVersion, filesRoot,
@@ -54,7 +55,7 @@ export async function openLazerLibrary(folder: string, cacheDir: string) {
     };
   } catch (error) {
     realm?.close(); Realm?.shutdown(); await rm(temporary, { recursive: true, force: true });
-    throw new Error(`Lecture lazer impossible : ${(error as Error).message}. Fermer lazer avant d’indexer.`);
+    throw new Error(`Lecture lazer impossible : ${(error as Error).message}`);
   }
 }
 

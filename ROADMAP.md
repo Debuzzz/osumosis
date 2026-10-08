@@ -14,7 +14,8 @@
 
 ## Profil et recommandations personnalisées
 
-- [ ] OAuth utilisateur `public identify` avec callback local, state et refresh token.
+- [x] OAuth utilisateur `public identify` avec callback local, state et refresh token ; profil public en cache.
+- [ ] Valider le flux OAuth avec un compte réel et préparer l’authentification de la distribution publique (sans secret embarqué).
 - [ ] Snapshots des tops, scores récents et profil par ruleset ; cache partagé.
 - [ ] Import versionné de `scores.db`, sans supposer qu’il contient les frames de replay.
 - [ ] Profil par mode, mods/vitesse, caractéristiques et performances comparables.
@@ -28,6 +29,12 @@
 - [ ] Import streamé de datasets officiels fournis par l’utilisateur.
 
 ## Plays et replays
+
+- [x] Corriger la détection partie/replay (statut tosu dédié), finaliser les résultats et exposer un diagnostic de capture avec journal local.
+- [x] En direct : fond local, compteurs compacts, PP observés/FC et scénarios transmis par tosu.
+- [x] Vue commune direct/historique, modes automatique et manuels, widgets partagés avec les tentatives sauvegardées.
+- [x] Snapshot des scores et statistiques pour les nouvelles captures ; anciennes données affichées sans champs inventés.
+- [x] Chronologie et erreurs horizontalement, regroupement des erreurs dans la même seconde.
 
 - [ ] Flux tosu précis, erreurs de timing et touches ; normalisation par version/capacités.
 - [ ] Séries de vie, UR et timing compressées ; pauses et trous de connexion explicites.
@@ -49,7 +56,9 @@
 - [ ] Tags, notes, sauvegarde et restauration, exports CSV/JSON.
 - [ ] Parseur commun de recherche vers SQL et API : AST, unités, dates et aliases documentés.
 - [ ] Filtres PP, accuracy, misses, sliderbreaks, replay et caractéristiques.
-- [ ] Vue réellement paginée par sets, puis virtualisation pour les listes importantes.
+- [x] Filtres de métadonnées visibles (tags, source, mapper, version) et recherche dans les recommandations.
+- [x] Chargement au scroll par lots de 20 sets complets, avec filtres et tri locaux.
+- [ ] Virtualisation pour les listes importantes.
 - [ ] Provenance/fraîcheur des champs et résolution explicite des conflits local/API.
 - [ ] Lecture des durées/BPM variables et fins de sliders via le moteur de map.
 - [ ] Détection de doublons et comparaison des révisions.
@@ -67,7 +76,33 @@
 - [ ] Commande de recommandation dans la CLI.
 - [ ] Tableau de diagnostic des capacités, quotas, appels API, cache et fraîcheur.
 - [ ] Reprise des travaux, migrations et limites de caches reproductibles.
-- [ ] Installation indépendante du runtime Codex et packaging Windows.
+- [x] Configuration Tauri 2, runtime Node compagnon et ressources natives préparés pour l’OS de build.
+- [x] Workflow GitHub Actions Windows/macOS/Linux, artefacts manuels et release en brouillon sur tag.
+- [ ] Compiler et essayer les installateurs sur les OS cibles ; versionner le premier Cargo.lock validé.
+- [ ] Signature Windows, notarisation macOS et stratégie de mises à jour.
+
+## Interface et distribution (0.2 en préparation)
+
+- [x] Un seul accès principal aux Réglages, profil osu! en haut à droite.
+- [x] Navigation compacte, focus visible, lien d’évitement, dialogs natifs et prise en compte du mouvement réduit.
+- [x] Base de localisation i18next, français/anglais et choix de langue persistant.
+- [x] CHANGELOG suivant Keep a Changelog, notes dans l’app et génération des notes de release.
+- [ ] Audit visuel et clavier sur les WebViews réelles, contrastes et libellés longs.
+- [ ] Traduction structurée des erreurs métier du backend et prise en charge RTL.
+- [ ] Fusion bibliothèque/recommandations, filtres de mods et farm fondé sur les gains de PP.
+- [ ] Widgets personnalisables pour le direct et les tentatives.
+- [ ] Éditeur de thème CSS dans les Réglages, aperçu et restauration du thème par défaut.
+
+## IA locale optionnelle, après le moteur de recommandations
+
+- [ ] Compléter d’abord le profil, les tops, les scénarios avec mods et le gain pondéré de PP calculé par le moteur.
+- [ ] Normaliser les métadonnées (tags, source, mapper, difficulté) et les caractéristiques dérivées des objets, avec provenance et confiance.
+- [ ] Index de similarité local avec embeddings précalculés et cache par checksum/version de modèle ; mises à jour incrémentales.
+- [ ] Adaptateur optionnel pour un modèle local via llama.cpp ou Ollama, sans chargement obligatoire pendant le jeu.
+- [ ] Transformer une demande en langage naturel en filtres structurés validés par le parseur, puis expliquer les candidats sélectionnés.
+- [ ] Modèle de raisonnement optionnel pour les explications complexes ; budget CPU/GPU/RAM configurable et fonctionnement sans IA conservé.
+
+Le modèle utilise le catalogue et les analyses connues. Il ne crée pas d’appels osu! implicites, ne calcule pas les PP à la place de rosu et ne traite pas un tag « farm » comme preuve de gain. Aucun modèle ni runtime IA n’est ajouté à cette livraison.
 
 ## Validation à réaliser quand demandée
 

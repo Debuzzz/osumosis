@@ -1,11 +1,15 @@
 {
   "name": "osumosis",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "osu!mosis — local osu! library, discovery and play analysis",
-  "bin": { "osumosis": "./bin/osumosis.mjs" },
-  "engines": { "node": ">=22.12.0" },
+  "bin": {
+    "osumosis": "./bin/osumosis.mjs"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  },
   "scripts": {
     "dev": "concurrently -k -n server,web -c cyan,magenta \"tsx watch server/index.ts\" \"vite --host 127.0.0.1\"",
     "build": "tsc --noEmit && vite build && tsup server/index.ts server/catalog-worker.ts server/analysis-worker.ts --format esm --platform node --target node22 --out-dir dist/server --external better-sqlite3 --external rosu-pp-js --external realm",
@@ -13,17 +17,26 @@
     "index": "tsx server/cli.ts",
     "test": "node --import tsx --test test/settings.test.ts test/lazer-files.test.ts test/catalog.test.ts",
     "test:realm": "node --import tsx --test test/realm.integration.ts",
-    "check:runtime": "node bin/check-runtime.mjs"
+    "check:runtime": "node bin/check-runtime.mjs",
+    "desktop:prepare": "npm run build && node scripts/prepare-desktop.mjs",
+    "desktop:dev": "tauri dev",
+    "desktop:build": "tauri build",
+    "desktop:info": "tauri info",
+    "release:notes": "node scripts/release-notes.mjs"
   },
   "dependencies": {
     "@fastify/static": "^10.1.5",
     "@fastify/websocket": "^11.0.0",
     "@tanstack/react-query": "^5.0.0",
+    "@tauri-apps/api": "^2.12.1",
+    "@tauri-apps/plugin-opener": "^2.7.0",
     "better-sqlite3": "^12.0.0",
     "fastify": "^5.0.0",
+    "i18next": "^26.4.2",
     "lucide-react": "^0.468.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-i18next": "^17.0.16",
     "realm": "^20.2.0",
     "rosu-pp-js": "^4.0.1",
     "ws": "^8.18.0",
@@ -34,6 +47,7 @@
     "esbuild": "^0.28.1"
   },
   "devDependencies": {
+    "@tauri-apps/cli": "^2.12.1",
     "@types/better-sqlite3": "^7.6.0",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
