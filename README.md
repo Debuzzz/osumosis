@@ -18,6 +18,16 @@ npm run desktop:dev
 
 Le menu Réglages reste en bas à gauche. Le bouton en haut à droite donne accès au profil osu!. Français et anglais sont disponibles dans les Réglages ; les [instructions de localisation](docs/LOCALIZATION.md) expliquent comment ajouter une langue. La version en bas de la barre latérale ouvre les notes de version ; [CHANGELOG.md](CHANGELOG.md) est la source des futures notes GitHub Releases.
 
+## Vérification du code et formatage
+
+ESLint repère les problèmes de code ; Prettier applique un format cohérent. Après `npm ci`, utiliser :
+
+```sh
+npm run lint          # vérifier le code
+npm run format:check  # vérifier le formatage
+npm run format        # formater les fichiers
+```
+
 ## Prérequis et démarrage sous Windows
 
 - Node.js LTS **22.12 ou plus récent**, avec npm, installé normalement sur le PC (version x64 conseillée).

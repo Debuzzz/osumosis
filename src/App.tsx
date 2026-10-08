@@ -1,182 +1,1521 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Activity, ArrowDownUp, ArrowRight, AudioLines, BookOpen, Check, ChevronRight, CircleHelp, Clock3, Database, Download, ExternalLink, FolderHeart, FolderOpen, Grid2X2, Layers3, List, LoaderCircle, Menu, Map as MapIcon, MoreHorizontal, Play as PlayIcon, Radio, RefreshCw, Search, Settings2, SlidersHorizontal, Sparkles, Star, Target, Terminal, Wifi, WifiOff, X } from 'lucide-react';
-import type { Analysis, Beatmap, Collection, LiveState, Play, SettingsResponse, SearchResult, Source, Status } from '../shared/types';
-import { api } from './api';
-import { Chart } from './Chart';
-import { Settings } from './Settings';
-import { Plays } from './Plays';
-import { MetadataFilters } from './MetadataFilters';
-import { Account } from './Account';
-import { ReleaseNotes } from './ReleaseNotes';
-import { useTranslation } from 'react-i18next';
-import { t, locale } from './i18n';
-import { openExternal } from './desktop';
-import { isTauri } from '@tauri-apps/api/core';
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  Activity,
+  ArrowDownUp,
+  ArrowRight,
+  AudioLines,
+  BookOpen,
+  Check,
+  ChevronRight,
+  CircleHelp,
+  Clock3,
+  Database,
+  Download,
+  ExternalLink,
+  FolderHeart,
+  FolderOpen,
+  Grid2X2,
+  Layers3,
+  List,
+  LoaderCircle,
+  Menu,
+  Map as MapIcon,
+  MoreHorizontal,
+  Play as PlayIcon,
+  Radio,
+  RefreshCw,
+  Search,
+  Settings2,
+  SlidersHorizontal,
+  Sparkles,
+  Star,
+  Target,
+  Terminal,
+  Wifi,
+  WifiOff,
+  X,
+} from "lucide-react";
+import type {
+  Analysis,
+  Beatmap,
+  Collection,
+  LiveState,
+  Play,
+  SettingsResponse,
+  SearchResult,
+  Source,
+  Status,
+} from "../shared/types";
+import { api } from "./api";
+import { Chart } from "./Chart";
+import { Settings } from "./Settings";
+import { Plays } from "./Plays";
+import { MetadataFilters } from "./MetadataFilters";
+import { Account } from "./Account";
+import { ReleaseNotes } from "./ReleaseNotes";
+import { useTranslation } from "react-i18next";
+import { t, locale } from "./i18n";
+import { openExternal } from "./desktop";
+import { isTauri } from "@tauri-apps/api/core";
 
-type Page = 'library' | 'recommend' | 'plays' | 'settings';
-const modes = ['osu!', 'taiko', 'catch', 'mania'];
-const formatTime = (s: number) => `${Math.floor(Math.max(0, s) / 60)}:${String(Math.floor(Math.max(0, s)) % 60).padStart(2, '0')}`;
-const outcomes: Record<string, string> = { completed: 'Terminé', failed: 'Fail', abandoned: 'Abandon', retry: 'Retry', interrupted: 'Interrompu' };
-const starColor = (stars: number | null) => stars === null ? '#777f90' : stars < 2 ? '#79bfed' : stars < 3 ? '#77d8c6' : stars < 4 ? '#b8df79' : stars < 5 ? '#e4d374' : stars < 6 ? '#efa981' : stars < 7 ? '#e97f9d' : '#c89bec';
-function coverUrl(map: Beatmap, allowFetch = false) { return map.hasBackground ? `/api/assets/${encodeURIComponent(map.key)}/background` : map.cover ? `/api/covers/${encodeURIComponent(map.key)}?fetch=${allowFetch ? '1' : '0'}` : null; }
+type Page = "library" | "recommend" | "plays" | "settings";
+const modes = ["osu!", "taiko", "catch", "mania"];
+const formatTime = (s: number) =>
+  `${Math.floor(Math.max(0, s) / 60)}:${String(Math.floor(Math.max(0, s)) % 60).padStart(2, "0")}`;
+const outcomes: Record<string, string> = {
+  completed: "Terminé",
+  failed: "Fail",
+  abandoned: "Abandon",
+  retry: "Retry",
+  interrupted: "Interrompu",
+};
+const starColor = (stars: number | null) =>
+  stars === null
+    ? "#777f90"
+    : stars < 2
+      ? "#79bfed"
+      : stars < 3
+        ? "#77d8c6"
+        : stars < 4
+          ? "#b8df79"
+          : stars < 5
+            ? "#e4d374"
+            : stars < 6
+              ? "#efa981"
+              : stars < 7
+                ? "#e97f9d"
+                : "#c89bec";
+function coverUrl(map: Beatmap, allowFetch = false) {
+  return map.hasBackground
+    ? `/api/assets/${encodeURIComponent(map.key)}/background`
+    : map.cover
+      ? `/api/covers/${encodeURIComponent(map.key)}?fetch=${allowFetch ? "1" : "0"}`
+      : null;
+}
 function useLive() {
-  const [live, setLive] = useState<LiveState>({ connected: false, state: t("Hors ligne"), client: '', paused: false, map: null, play: null });
+  const [live, setLive] = useState<LiveState>({
+    connected: false,
+    state: t("Hors ligne"),
+    client: "",
+    paused: false,
+    map: null,
+    play: null,
+  });
   const queryClient = useQueryClient();
   useEffect(() => {
-    let socket: WebSocket | undefined, retry: ReturnType<typeof setTimeout>, closed = false;
+    let socket: WebSocket | undefined,
+      retry: ReturnType<typeof setTimeout>,
+      closed = false;
     const connect = () => {
-      socket = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`);
-      socket.onmessage = event => { const message = JSON.parse(event.data); if (message.type === 'live') setLive(message.data); if (message.type === 'account-changed') void queryClient.invalidateQueries({ queryKey: ['account'] }); if (message.type === 'tosu-diagnostic') { void queryClient.invalidateQueries({ queryKey: ['tosu-diagnostics'] }); } if (message.type === 'index' || message.type === 'play-saved') { void queryClient.invalidateQueries({ queryKey: ['status'] }); if (message.type === 'play-saved' || !message.data.running) { void queryClient.invalidateQueries({ queryKey: ['maps'] }); void queryClient.invalidateQueries({ queryKey: ['collections'] }); void queryClient.invalidateQueries({ queryKey: ['plays'] }); void queryClient.invalidateQueries({ queryKey: ['detail'] }); void queryClient.invalidateQueries({ queryKey: ['performance-map'] }); } } };
-      socket.onclose = () => { if (!closed) { setLive(previous => ({ ...previous, connected: false, state: 'Connexion au service interrompue' })); retry = setTimeout(connect, 3000); } };
+      socket = new WebSocket(
+        `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws`,
+      );
+      socket.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+        if (message.type === "live") setLive(message.data);
+        if (message.type === "account-changed")
+          void queryClient.invalidateQueries({ queryKey: ["account"] });
+        if (message.type === "tosu-diagnostic") {
+          void queryClient.invalidateQueries({ queryKey: ["tosu-diagnostics"] });
+        }
+        if (message.type === "index" || message.type === "play-saved") {
+          void queryClient.invalidateQueries({ queryKey: ["status"] });
+          if (message.type === "play-saved" || !message.data.running) {
+            void queryClient.invalidateQueries({ queryKey: ["maps"] });
+            void queryClient.invalidateQueries({ queryKey: ["collections"] });
+            void queryClient.invalidateQueries({ queryKey: ["plays"] });
+            void queryClient.invalidateQueries({ queryKey: ["detail"] });
+            void queryClient.invalidateQueries({ queryKey: ["performance-map"] });
+          }
+        }
+      };
+      socket.onclose = () => {
+        if (!closed) {
+          setLive((previous) => ({
+            ...previous,
+            connected: false,
+            state: "Connexion au service interrompue",
+          }));
+          retry = setTimeout(connect, 3000);
+        }
+      };
     };
-    connect(); return () => { closed = true; clearTimeout(retry); socket?.close(); };
+    connect();
+    return () => {
+      closed = true;
+      clearTimeout(retry);
+      socket?.close();
+    };
   }, [queryClient]);
   return live;
 }
 
 export default function App() {
   useTranslation();
-  const [compact, setCompact] = useState(() => matchMedia('(max-width: 780px)').matches);
-  const [navigationOpen, setNavigationOpen] = useState(false), [notesOpen, setNotesOpen] = useState(false);
-  const menuTrigger = useRef<HTMLButtonElement>(null), navigation = useRef<HTMLElement>(null), wasNavigationOpen = useRef(false);
-  useEffect(() => { const media = matchMedia('(max-width: 780px)'); const change = () => { setCompact(media.matches); setNavigationOpen(false); }; media.addEventListener('change', change); return () => media.removeEventListener('change', change); }, []);
-  useEffect(() => { if (compact && navigationOpen) navigation.current?.querySelector<HTMLButtonElement>('button')?.focus(); else if (wasNavigationOpen.current) { if (compact) menuTrigger.current?.focus(); else document.getElementById('main-content')?.focus(); } wasNavigationOpen.current = navigationOpen; }, [compact, navigationOpen]);
+  const [compact, setCompact] = useState(() => matchMedia("(max-width: 780px)").matches);
+  const [navigationOpen, setNavigationOpen] = useState(false),
+    [notesOpen, setNotesOpen] = useState(false);
+  const menuTrigger = useRef<HTMLButtonElement>(null),
+    navigation = useRef<HTMLElement>(null),
+    wasNavigationOpen = useRef(false);
+  useEffect(() => {
+    const media = matchMedia("(max-width: 780px)");
+    const change = () => {
+      setCompact(media.matches);
+      setNavigationOpen(false);
+    };
+    media.addEventListener("change", change);
+    return () => media.removeEventListener("change", change);
+  }, []);
+  useEffect(() => {
+    if (compact && navigationOpen)
+      navigation.current?.querySelector<HTMLButtonElement>("button")?.focus();
+    else if (wasNavigationOpen.current) {
+      if (compact) menuTrigger.current?.focus();
+      else document.getElementById("main-content")?.focus();
+    }
+    wasNavigationOpen.current = navigationOpen;
+  }, [compact, navigationOpen]);
   useEffect(() => {
     if (!isTauri()) return;
-    const external = (event: MouseEvent) => { const anchor = (event.target as Element).closest?.('a[href]') as HTMLAnchorElement | null; if (anchor && /^(https?:|osu:)/.test(anchor.href) && new URL(anchor.href).origin !== location.origin) { event.preventDefault(); void openExternal(anchor.href).catch(error => setToast(t(error.message))); } };
-    document.addEventListener('click', external); return () => document.removeEventListener('click', external);
+    const external = (event: MouseEvent) => {
+      const anchor = (event.target as Element).closest?.("a[href]") as HTMLAnchorElement | null;
+      if (
+        anchor &&
+        /^(https?:|osu:)/.test(anchor.href) &&
+        new URL(anchor.href).origin !== location.origin
+      ) {
+        event.preventDefault();
+        void openExternal(anchor.href).catch((error) => setToast(t(error.message)));
+      }
+    };
+    document.addEventListener("click", external);
+    return () => document.removeEventListener("click", external);
   }, []);
-  const closeNavigation = () => { setNavigationOpen(false); };
+  const closeNavigation = () => {
+    setNavigationOpen(false);
+  };
 
-  const [page, setPage] = useState<Page>('library'); const [selected, setSelected] = useState<Beatmap | null>(null);
-  const [toast, setToast] = useState(''); const live = useLive(); const client = useQueryClient();
-  const status = useQuery({ queryKey: ['status'], queryFn: () => api<Status>('/api/status'), refetchInterval: 4000 });
-  const collections = useQuery({ queryKey: ['collections'], queryFn: () => api<Collection[]>('/api/collections') });
-  const [collection, setCollection] = useState('');
+  const [page, setPage] = useState<Page>("library");
+  const [selected, setSelected] = useState<Beatmap | null>(null);
+  const [toast, setToast] = useState("");
+  const live = useLive();
+  const client = useQueryClient();
+  const status = useQuery({
+    queryKey: ["status"],
+    queryFn: () => api<Status>("/api/status"),
+    refetchInterval: 4000,
+  });
+  const collections = useQuery({
+    queryKey: ["collections"],
+    queryFn: () => api<Collection[]>("/api/collections"),
+  });
+  const [collection, setCollection] = useState("");
   const [indexBusy, setIndexBusy] = useState(false);
-  useEffect(() => { if (!toast) return; const timer = setTimeout(() => setToast(''), 7000); return () => clearTimeout(timer); }, [toast]);
-  const index = async () => { setIndexBusy(true); try { await api('/api/index', {}); await client.invalidateQueries({ queryKey: ['status'] }); } catch (e) { setToast(t((e as Error).message)); } finally { setIndexBusy(false); } };
+  useEffect(() => {
+    if (!toast) return;
+    const timer = setTimeout(() => setToast(""), 7000);
+    return () => clearTimeout(timer);
+  }, [toast]);
+  const index = async () => {
+    setIndexBusy(true);
+    try {
+      await api("/api/index", {});
+      await client.invalidateQueries({ queryKey: ["status"] });
+    } catch (e) {
+      setToast(t((e as Error).message));
+    } finally {
+      setIndexBusy(false);
+    }
+  };
   const nav: { id: Page; title: string; icon: typeof MapIcon; detail?: string }[] = [
-    { id: 'library', title: t("Bibliothèque"), icon: Layers3, detail: String(status.data?.installed ?? 0) },
-    { id: 'recommend', title: t("Pour toi"), icon: Sparkles },
-    { id: 'plays', title: t("Tes plays"), icon: Activity },
+    {
+      id: "library",
+      title: t("Bibliothèque"),
+      icon: Layers3,
+      detail: String(status.data?.installed ?? 0),
+    },
+    { id: "recommend", title: t("Pour toi"), icon: Sparkles },
+    { id: "plays", title: t("Tes plays"), icon: Activity },
   ];
-  useEffect(() => { setNavigationOpen(false); }, [page]);
-  return <div className="app-shell">
-    <a className="skip-link" href="#main-content">{t('Aller au contenu')}</a>
-    {compact && navigationOpen && <button className="navigation-backdrop" aria-label={t('Fermer la navigation')} tabIndex={-1} onClick={closeNavigation} />}
-    <aside id="main-navigation" ref={navigation} className={`sidebar ${navigationOpen ? 'navigation-open' : ''}`} inert={compact && !navigationOpen ? true : undefined} onKeyDown={event => {
-      if (event.key === 'Escape') closeNavigation();
-      if (compact && navigationOpen && event.key === 'Tab') { const buttons = navigation.current!.querySelectorAll<HTMLButtonElement>('button'); const first = buttons[0], last = buttons[buttons.length - 1]; if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); } else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); } }
-    }}>
-      <button className="mobile-nav-close icon-button" aria-label={t('Fermer la navigation')} onClick={closeNavigation}><X size={20} /></button>
-      <button className="brand" onClick={() => { if (compact) closeNavigation(); setPage('library'); }}><span className="brand-orbit"><i /></span><span>osu!<b>{t("mosis")}</b><small>{t("YOUR NEXT GOOD PLAY")}</small></span></button>
-      <div className="workspace-label">{t("ESPACE LOCAL")} <span>01</span></div>
-      <nav aria-label={t("Navigation principale")}>{nav.map(item => <button key={item.id} aria-current={page === item.id ? "page" : undefined} className={`nav-item ${page === item.id ? 'active' : ''}`} onClick={() => { if (compact) closeNavigation(); setPage(item.id); if (item.id === 'library') setCollection(''); }}><item.icon size={18} /><span>{item.title}</span>{item.detail && <em>{item.detail}</em>}{item.id === 'plays' && <i className={`connection-dot ${live.connected ? 'on' : ''}`} />}</button>)}</nav>
-      <div className="sidebar-section"><span>{t("COLLECTIONS")}</span><FolderHeart size={14} /></div>
-      <div className="collection-nav">{collections.data?.length ? collections.data.slice(0, 15).map(c => <button key={c.id} className={collection === String(c.id) && page === 'library' ? 'selected' : ''} onClick={() => { if (compact) closeNavigation(); setCollection(String(c.id)); setPage('library'); }}><span className="collection-dot" /><span>{c.name}</span><em>{c.installed}</em></button>) : <p>{t("Les collections du jeu apparaîtront après l’indexation.")}</p>}</div>
-      <div className="sidebar-bottom"><div className="local-note"><Database size={16} /><span>{t("Ton catalogue, chez toi.")}<small>{t("SQLite · cache local")}</small></span></div><button aria-current={page === 'settings' ? 'page' : undefined} className={`nav-item ${page === 'settings' ? 'active' : ''}`} onClick={() => { if (compact) closeNavigation(); setPage('settings'); }}><Settings2 size={18} /><span>{t("Réglages")}</span></button><button className="version release-trigger" onClick={() => setNotesOpen(true)}>osu!mosis <span>{t("v0.2.0 · Notes de version")}</span></button></div>
-    </aside>
-    <div className="main-shell" inert={compact && navigationOpen ? true : undefined}>
-      <header className="topbar"><button ref={menuTrigger} className="mobile-menu icon-button" aria-label={t("Ouvrir la navigation")} aria-expanded={navigationOpen} aria-controls="main-navigation" onClick={() => setNavigationOpen(true)}><Menu size={20} /></button><div className="breadcrumb">{t("TON ESPACE")} <ChevronRight size={13} /><span>{page === 'settings' ? t("Réglages") : nav.find(n => n.id === page)?.title}</span></div><div className="topbar-actions"><span className={`status-pill ${live.connected ? 'connected' : ''}`}>{live.connected ? <Wifi size={13} /> : <WifiOff size={13} />}{live.connected ? t("tosu connecté") : t("tosu hors ligne")}</span><Account onSettings={() => setPage('settings')} notify={message => setToast(t(message))} /></div></header>
-      <main id="main-content" tabIndex={-1}>
-        {status.isError && <div className="error-box">{t("Service local indisponible :")} {status.error.message}</div>}
-        {page === 'library' && <Library status={status.data} collections={collections.data || []} collection={collection} setCollection={setCollection} onSelect={setSelected} onIndex={index} onSettings={() => setPage('settings')} busy={indexBusy} notify={setToast} />}
-        {page === 'recommend' && <Recommendations onSelect={setSelected} notify={setToast} />}
-        {page === 'plays' && <Plays live={live} onSettings={() => setPage('settings')} />}
-        {page === 'settings' && <Settings notify={setToast} onIndex={index} onSaved={() => { setSelected(null); setCollection(''); }} />}
-      </main>
-      <footer className="footer"><span><i className="connection-dot on" /> {t("Service local · 127.0.0.1")}</span><span>{status.data?.api.cacheHits ?? 0} {t("réponses réutilisées")} <span className="footer-divider">/</span> {status.data?.api.requests ?? 0} {t("/ 5 appels cette minute")}</span></footer>
+  useEffect(() => {
+    setNavigationOpen(false);
+  }, [page]);
+  return (
+    <div className="app-shell">
+      <a className="skip-link" href="#main-content">
+        {t("Aller au contenu")}
+      </a>
+      {compact && navigationOpen && (
+        <button
+          className="navigation-backdrop"
+          aria-label={t("Fermer la navigation")}
+          tabIndex={-1}
+          onClick={closeNavigation}
+        />
+      )}
+      <aside
+        id="main-navigation"
+        ref={navigation}
+        className={`sidebar ${navigationOpen ? "navigation-open" : ""}`}
+        inert={compact && !navigationOpen ? true : undefined}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") closeNavigation();
+          if (compact && navigationOpen && event.key === "Tab") {
+            const buttons = navigation.current!.querySelectorAll<HTMLButtonElement>("button");
+            const first = buttons[0],
+              last = buttons[buttons.length - 1];
+            if (event.shiftKey && document.activeElement === first) {
+              event.preventDefault();
+              last.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+              event.preventDefault();
+              first.focus();
+            }
+          }
+        }}
+      >
+        <button
+          className="mobile-nav-close icon-button"
+          aria-label={t("Fermer la navigation")}
+          onClick={closeNavigation}
+        >
+          <X size={20} />
+        </button>
+        <button
+          className="brand"
+          onClick={() => {
+            if (compact) closeNavigation();
+            setPage("library");
+          }}
+        >
+          <span className="brand-orbit">
+            <i />
+          </span>
+          <span>
+            osu!<b>{t("mosis")}</b>
+            <small>{t("YOUR NEXT GOOD PLAY")}</small>
+          </span>
+        </button>
+        <div className="workspace-label">
+          {t("ESPACE LOCAL")} <span>01</span>
+        </div>
+        <nav aria-label={t("Navigation principale")}>
+          {nav.map((item) => (
+            <button
+              key={item.id}
+              aria-current={page === item.id ? "page" : undefined}
+              className={`nav-item ${page === item.id ? "active" : ""}`}
+              onClick={() => {
+                if (compact) closeNavigation();
+                setPage(item.id);
+                if (item.id === "library") setCollection("");
+              }}
+            >
+              <item.icon size={18} />
+              <span>{item.title}</span>
+              {item.detail && <em>{item.detail}</em>}
+              {item.id === "plays" && (
+                <i className={`connection-dot ${live.connected ? "on" : ""}`} />
+              )}
+            </button>
+          ))}
+        </nav>
+        <div className="sidebar-section">
+          <span>{t("COLLECTIONS")}</span>
+          <FolderHeart size={14} />
+        </div>
+        <div className="collection-nav">
+          {collections.data?.length ? (
+            collections.data.slice(0, 15).map((c) => (
+              <button
+                key={c.id}
+                className={collection === String(c.id) && page === "library" ? "selected" : ""}
+                onClick={() => {
+                  if (compact) closeNavigation();
+                  setCollection(String(c.id));
+                  setPage("library");
+                }}
+              >
+                <span className="collection-dot" />
+                <span>{c.name}</span>
+                <em>{c.installed}</em>
+              </button>
+            ))
+          ) : (
+            <p>{t("Les collections du jeu apparaîtront après l’indexation.")}</p>
+          )}
+        </div>
+        <div className="sidebar-bottom">
+          <div className="local-note">
+            <Database size={16} />
+            <span>
+              {t("Ton catalogue, chez toi.")}
+              <small>{t("SQLite · cache local")}</small>
+            </span>
+          </div>
+          <button
+            aria-current={page === "settings" ? "page" : undefined}
+            className={`nav-item ${page === "settings" ? "active" : ""}`}
+            onClick={() => {
+              if (compact) closeNavigation();
+              setPage("settings");
+            }}
+          >
+            <Settings2 size={18} />
+            <span>{t("Réglages")}</span>
+          </button>
+          <button className="version release-trigger" onClick={() => setNotesOpen(true)}>
+            osu!mosis <span>{t("v0.2.0 · Notes de version")}</span>
+          </button>
+        </div>
+      </aside>
+      <div className="main-shell" inert={compact && navigationOpen ? true : undefined}>
+        <header className="topbar">
+          <button
+            ref={menuTrigger}
+            className="mobile-menu icon-button"
+            aria-label={t("Ouvrir la navigation")}
+            aria-expanded={navigationOpen}
+            aria-controls="main-navigation"
+            onClick={() => setNavigationOpen(true)}
+          >
+            <Menu size={20} />
+          </button>
+          <div className="breadcrumb">
+            {t("TON ESPACE")} <ChevronRight size={13} />
+            <span>
+              {page === "settings" ? t("Réglages") : nav.find((n) => n.id === page)?.title}
+            </span>
+          </div>
+          <div className="topbar-actions">
+            <span className={`status-pill ${live.connected ? "connected" : ""}`}>
+              {live.connected ? <Wifi size={13} /> : <WifiOff size={13} />}
+              {live.connected ? t("tosu connecté") : t("tosu hors ligne")}
+            </span>
+            <Account
+              onSettings={() => setPage("settings")}
+              notify={(message) => setToast(t(message))}
+            />
+          </div>
+        </header>
+        <main id="main-content" tabIndex={-1}>
+          {status.isError && (
+            <div className="error-box">
+              {t("Service local indisponible :")} {status.error.message}
+            </div>
+          )}
+          {page === "library" && (
+            <Library
+              status={status.data}
+              collections={collections.data || []}
+              collection={collection}
+              setCollection={setCollection}
+              onSelect={setSelected}
+              onIndex={index}
+              onSettings={() => setPage("settings")}
+              busy={indexBusy}
+              notify={setToast}
+            />
+          )}
+          {page === "recommend" && <Recommendations onSelect={setSelected} notify={setToast} />}
+          {page === "plays" && <Plays live={live} onSettings={() => setPage("settings")} />}
+          {page === "settings" && (
+            <Settings
+              notify={setToast}
+              onIndex={index}
+              onSaved={() => {
+                setSelected(null);
+                setCollection("");
+              }}
+            />
+          )}
+        </main>
+        <footer className="footer">
+          <span>
+            <i className="connection-dot on" /> {t("Service local · 127.0.0.1")}
+          </span>
+          <span>
+            {status.data?.api.cacheHits ?? 0} {t("réponses réutilisées")}{" "}
+            <span className="footer-divider">/</span> {status.data?.api.requests ?? 0}{" "}
+            {t("/ 5 appels cette minute")}
+          </span>
+        </footer>
+      </div>
+      {selected && (
+        <MapDetail
+          key={selected.key}
+          map={selected}
+          onClose={() => setSelected(null)}
+          onSelect={setSelected}
+        />
+      )}
+      {notesOpen && <ReleaseNotes onClose={() => setNotesOpen(false)} />}
+      {toast && (
+        <div className="toast" role="status">
+          <CircleHelp size={18} />
+          <span>{toast}</span>
+          <button onClick={() => setToast("")} aria-label={t("Fermer")}>
+            <X size={15} />
+          </button>
+        </div>
+      )}
     </div>
-    {selected && <MapDetail key={selected.key} map={selected} onClose={() => setSelected(null)} onSelect={setSelected} />}
-    {notesOpen && <ReleaseNotes onClose={() => setNotesOpen(false)} />}
-    {toast && <div className="toast" role="status"><CircleHelp size={18} /><span>{toast}</span><button onClick={() => setToast('')} aria-label={t("Fermer")}><X size={15} /></button></div>}
-  </div>;
+  );
 }
 
-function Library({ status, collections, collection, setCollection, onSelect, onIndex, onSettings, busy, notify }: { status?: Status; collections: Collection[]; collection: string; setCollection: (s: string) => void; onSelect: (m: Beatmap) => void; onIndex: () => void; onSettings: () => void; busy: boolean; notify: (s: string) => void }) {
-  const [source, setSource] = useState<Source>('local'); const [query, setQuery] = useState(''); const [q, setQ] = useState('');
-  const [mode, setMode] = useState('any'), [category, setCategory] = useState('any'), [sort, setSort] = useState('title');
-  const [view, setView] = useState('grid'), [advanced, setAdvanced] = useState(false), [help, setHelp] = useState(false), [discovering, setDiscovering] = useState(false), [hasMore, setHasMore] = useState(false);
+function Library({
+  status,
+  collections,
+  collection,
+  setCollection,
+  onSelect,
+  onIndex,
+  onSettings,
+  busy,
+  notify,
+}: {
+  status?: Status;
+  collections: Collection[];
+  collection: string;
+  setCollection: (s: string) => void;
+  onSelect: (m: Beatmap) => void;
+  onIndex: () => void;
+  onSettings: () => void;
+  busy: boolean;
+  notify: (s: string) => void;
+}) {
+  const [source, setSource] = useState<Source>("local");
+  const [query, setQuery] = useState("");
+  const [q, setQ] = useState("");
+  const [mode, setMode] = useState("any"),
+    [category, setCategory] = useState("any"),
+    [sort, setSort] = useState("title");
+  const [view, setView] = useState("grid"),
+    [advanced, setAdvanced] = useState(false),
+    [help, setHelp] = useState(false),
+    [discovering, setDiscovering] = useState(false),
+    [hasMore, setHasMore] = useState(false);
   const client = useQueryClient();
-  useEffect(() => { const timer = setTimeout(() => { setQ(query); }, 250); return () => clearTimeout(timer); }, [query]);
-  const params = new URLSearchParams({ source, q, mode, status: category, sort, collection, group: 'sets', limit: '20' }).toString();
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setQ(query);
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [query]);
+  const params = new URLSearchParams({
+    source,
+    q,
+    mode,
+    status: category,
+    sort,
+    collection,
+    group: "sets",
+    limit: "20",
+  }).toString();
   const result = useInfiniteQuery({
-    queryKey: ['maps', 'infinite', params], initialPageParam: 1,
+    queryKey: ["maps", "infinite", params],
+    initialPageParam: 1,
     queryFn: ({ pageParam }) => api<SearchResult>(`/api/maps?${params}&page=${pageParam}`),
-    getNextPageParam: last => last.page < last.pages ? last.page + 1 : undefined,
+    getNextPageParam: (last) => (last.page < last.pages ? last.page + 1 : undefined),
   });
   const sentinel = useRef<HTMLDivElement>(null);
   const { fetchNextPage, hasNextPage, isFetching, isFetchNextPageError } = result;
   useEffect(() => {
     if (!sentinel.current || !hasNextPage || isFetching || isFetchNextPageError) return;
-    const observer = new IntersectionObserver(entries => {
-      if (entries.some(entry => entry.isIntersecting)) void fetchNextPage({ cancelRefetch: false });
-    }, { rootMargin: '120px' });
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting))
+          void fetchNextPage({ cancelRefetch: false });
+      },
+      { rootMargin: "120px" },
+    );
     observer.observe(sentinel.current);
     return () => observer.disconnect();
   }, [fetchNextPage, hasNextPage, isFetching, isFetchNextPageError, params]);
-  const discover = async (more = false) => { setDiscovering(true); try { const data = await api<{ imported: number; cached: boolean; hasMore: boolean }>('/api/discover', { q: query, mode, status: category, more }); setHasMore(data.hasMore); setQ(query); await client.invalidateQueries({ queryKey: ['maps'] }); await client.invalidateQueries({ queryKey: ['status'] }); notify(data.cached ? t("Recherche réutilisée depuis le cache.") : t("{{p0}} difficultés ajoutées au catalogue. Aucune installation dans le jeu.", { p0: data.imported })); } catch (e) { notify((e as Error).message); } finally { setDiscovering(false); } };
-  const groups = useMemo(() => result.data?.pages.flatMap(batch => batch.groups || []) || [], [result.data]);
+  const discover = async (more = false) => {
+    setDiscovering(true);
+    try {
+      const data = await api<{ imported: number; cached: boolean; hasMore: boolean }>(
+        "/api/discover",
+        { q: query, mode, status: category, more },
+      );
+      setHasMore(data.hasMore);
+      setQ(query);
+      await client.invalidateQueries({ queryKey: ["maps"] });
+      await client.invalidateQueries({ queryKey: ["status"] });
+      notify(
+        data.cached
+          ? t("Recherche réutilisée depuis le cache.")
+          : t("{{p0}} difficultés ajoutées au catalogue. Aucune installation dans le jeu.", {
+              p0: data.imported,
+            }),
+      );
+    } catch (e) {
+      notify((e as Error).message);
+    } finally {
+      setDiscovering(false);
+    }
+  };
+  const groups = useMemo(
+    () => result.data?.pages.flatMap((batch) => batch.groups || []) || [],
+    [result.data],
+  );
   const total = result.data?.pages[0]?.total || 0;
   const totalSets = result.data?.pages[0]?.totalSets || 0;
-  return <>
-    <div className="page-heading"><div><div className="eyebrow"><span /> {t("EXPLORE. PLAY. REPEAT.")}</div><h1>{t("La prochaine bonne map")}<span>.</span></h1><p>{t("Ta bibliothèque osu!, avec un peu plus de possibilités.")}</p></div><button className="secondary-button" onClick={onIndex} disabled={busy || status?.index.running}><RefreshCw size={15} className={status?.index.running ? 'spin' : ''} />{status?.index.running ? t("Indexation…") : t("Indexer la bibliothèque")}</button></div>
-    <div className="stat-strip"><Stat label={t("DIFFICULTÉS INSTALLÉES")} value={(status?.installed || 0).toLocaleString(locale())} icon={Layers3} /><Stat label={t("SETS LOCAUX")} value={(status?.sets || 0).toLocaleString(locale())} icon={MapIcon} /><Stat label={t("COLLECTIONS")} value={String(status?.collections || 0)} icon={FolderHeart} /><Stat label={t("TENTATIVES OBSERVÉES")} value={String(status?.plays || 0)} icon={Activity} /></div>
-    {status?.index.running && <div className="index-progress"><LoaderCircle size={16} className="spin" /><span>{status.index.phase === 'collections' ? t("Lecture des collections") : t("Lecture des maps")} · {status.index.processed.toLocaleString(locale())} {t("fichiers")}</span><div className="indeterminate" /></div>}
-    {status?.index.phase === 'error' && <div className="error-box">{status.index.message}</div>}
-    <section className="search-panel">
-      <div className="source-tabs">{([['local', t("Installées"), FolderOpen], ['cached', t("Catalogue"), Database], ['new', t("Découvrir"), Sparkles]] as const).map(([id, label, Icon]) => <button key={id} aria-pressed={source === id} className={source === id ? 'active' : ''} onClick={() => setSource(id)}><Icon size={15} />{label}{id === 'local' && <span>{status?.installed || 0}</span>}</button>)}<span className="source-note">{source === 'new' ? t("Réseau sur demande · 5 appels / min") : t('Recherche locale · aucun appel API')}</span></div>
-      <div className="search-input"><Search size={21} /><input aria-label={t("Rechercher des maps")} placeholder={t("Artiste, titre, mapper… ou stars>=5 bpm>180")} value={query} onChange={e => setQuery(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && source === 'new') void discover(); }} />{query && <button className="icon-button" title={t("Effacer la recherche")} onClick={() => setQuery('')}><X size={16} /></button>}<button className={`icon-button ${help ? 'selected' : ''}`} aria-expanded={help} onClick={() => setHelp(!help)} title={t("Syntaxe de recherche")}><CircleHelp size={18} /></button></div>
-      {help && <div className="search-help"><code>{t("stars>=5 stars<6.5")}</code><code>{t("bpm>180 length<180")}</code><code>{t("collection:\"DT farm\"")}</code><code>{t("played=false")}</code><code>tags="stream" source="Touhou"</code><p>{t("Champs : stars, bpm, length (secondes), ar, od, cs, hp, objects, artist, title, creator, version, tag, status, local, played. Les filtres avancés de PP arriveront avec le profil joueur.")}</p></div>}
-      <div className="filter-row"><span className="filter-label">{t("Mode")}</span><div className="chips">{[['any', t("Tous")], ...modes.map((name, i) => [String(i), name])].map(([value, label]) => <button key={value} aria-pressed={mode === value} className={mode === value ? 'active' : ''} onClick={() => setMode(value)}>{label}</button>)}</div><button className={`more-filters ${advanced ? 'active' : ''}`} aria-expanded={advanced} onClick={() => setAdvanced(!advanced)}><SlidersHorizontal size={14} />{t("Filtres")}</button></div>
-      <div className="filter-row"><span className="filter-label">{t("Statut")}</span><div className="chips">{[['any', t("Tous")], ['ranked', 'Ranked'], ['loved', 'Loved'], ['qualified', 'Qualified'], ['pending', 'Pending'], ['graveyard', 'Graveyard']].map(([value, label]) => <button key={value} aria-pressed={category === value} className={category === value ? 'active' : ''} onClick={() => setCategory(value)}>{label}</button>)}</div></div>
-      {advanced && <><div className="advanced-filters"><label>{t("Collection")}<select value={collection} onChange={e => setCollection(e.target.value)}><option value="">{t("Toutes les collections")}</option>{collections.map(c => <option key={c.id} value={c.id}>{c.name} ({c.installed}/{c.total})</option>)}</select></label><div><span className="field-label">{t("Raccourcis")}</span><div className="chips">{[[t("Jamais observée"), 'played=false'], [t("Courte (< 2 min)"), 'length<120'], ['5–6 ★', 'stars>=5 stars<6']].map(([name, predicate]) => <button key={name} onClick={() => setQuery(query ? `${query} ${predicate}` : predicate)}>{name}</button>)}</div></div></div><MetadataFilters query={query} onChange={setQuery} /></>}
-      {source === 'new' && <div className="discovery-row"><p>{t("Les découvertes restent dans le catalogue, même sans téléchargement.")}</p><button className="primary-button small" onClick={() => void discover()} disabled={discovering}>{discovering ? <LoaderCircle size={14} className="spin" /> : <Sparkles size={14} />}{t("Chercher en ligne")}</button>{hasMore && <button className="secondary-button small" onClick={() => void discover(true)} disabled={discovering}>{t("Découvrir davantage")}</button>}</div>}
-    </section>
-    <div className="results-toolbar"><div><span className="results-number">{total.toLocaleString(locale())}</span> {t("difficultés")} <span className="muted">{collection ? `· ${collections.find(c => String(c.id) === collection)?.name || t("Collection")}` : t("· à explorer")}</span>{result.isFetching && <LoaderCircle className="spin" size={14} />}</div><div className="sort-tools"><ArrowDownUp size={14} /><select aria-label={t("Trier les maps")} value={sort} onChange={e => setSort(e.target.value)}><option value="title">{t("Titre")}</option><option value="artist">{t("Artiste")}</option><option value="difficulty">{t("Difficulté")}</option><option value="length">{t("Durée")}</option><option value="bpm">BPM</option><option value="recent">{t("Ajout récent")}</option><option value="played">{t("Dernier play")}</option></select><div className="view-toggle"><button title={t("Grille")} aria-pressed={view === 'grid'} className={view === 'grid' ? 'active' : ''} onClick={() => setView('grid')}><Grid2X2 size={16} /></button><button title={t("Liste")} aria-pressed={view === 'list'} className={view === 'list' ? 'active' : ''} onClick={() => setView('list')}><List size={17} /></button></div></div></div>
-    {result.isPending ? <div className="catalog-loading" role="status"><LoaderCircle className="spin" size={18} />{t("Chargement des maps…")}</div> : result.isError && !groups.length ? <div className="error-box">{result.error.message}<button className="secondary-button small" onClick={() => void result.refetch()}>{t("Réessayer")}</button></div> : groups.length ? <div className={`map-grid ${view === 'list' ? 'list-view' : ''}`}>{groups.map(maps => <MapCard key={maps[0].key} maps={maps} onSelect={onSelect} allowFetch={source === 'new'} />)}</div> : <div className="empty-library"><div className="empty-orbits"><span /><span /><span /><MapIcon size={33} /></div><div className="eyebrow">{t("UN CATALOGUE QUI GRANDIT AVEC TOI")}</div><h2>{query || collection || category !== 'any' || mode !== 'any' ? t('Aucune map avec ces filtres.') : source === 'local' ? t("Ta bibliothèque commence ici.") : t("Encore aucune map dans cette vue.")}</h2><p>{source === 'local' ? t("Choisis ton profil stable ou lazer dans les Réglages, puis indexe tes maps, images et collections sur ce PC.") : t("Les maps découvertes en ligne seront conservées ici, prêtes pour une prochaine recherche.")}</p><button className="primary-button" onClick={onSettings}><FolderOpen size={17} />{t("Configurer osu!")}<ArrowRight size={15} /></button><span className="empty-footnote">{t("Tes fichiers de jeu sont lus, jamais modifiés.")}</span></div>}
-    {groups.length > 0 && <div ref={sentinel} className="catalog-load-more" aria-live="polite">
-      <span>{groups.length.toLocaleString(locale())} / {totalSets.toLocaleString(locale())} {t("sets affichés")}</span>
-      {result.isFetchingNextPage ? <span role="status"><LoaderCircle className="spin" size={16} />{t("Chargement de 20 sets supplémentaires…")}</span> : result.isFetchNextPageError ? <><span className="error-box">{result.error.message}</span><button className="secondary-button" onClick={() => void result.fetchNextPage({ cancelRefetch: false })}>{t("Réessayer")}</button></> : result.hasNextPage ? <button className="secondary-button" disabled={result.isFetching} onClick={() => void result.fetchNextPage({ cancelRefetch: false })}>{t("Charger 20 sets supplémentaires")}</button> : <span>{t("Fin des résultats")}</span>}
-    </div>}
-  </>;
+  return (
+    <>
+      <div className="page-heading">
+        <div>
+          <div className="eyebrow">
+            <span /> {t("EXPLORE. PLAY. REPEAT.")}
+          </div>
+          <h1>
+            {t("La prochaine bonne map")}
+            <span>.</span>
+          </h1>
+          <p>{t("Ta bibliothèque osu!, avec un peu plus de possibilités.")}</p>
+        </div>
+        <button
+          className="secondary-button"
+          onClick={onIndex}
+          disabled={busy || status?.index.running}
+        >
+          <RefreshCw size={15} className={status?.index.running ? "spin" : ""} />
+          {status?.index.running ? t("Indexation…") : t("Indexer la bibliothèque")}
+        </button>
+      </div>
+      <div className="stat-strip">
+        <Stat
+          label={t("DIFFICULTÉS INSTALLÉES")}
+          value={(status?.installed || 0).toLocaleString(locale())}
+          icon={Layers3}
+        />
+        <Stat
+          label={t("SETS LOCAUX")}
+          value={(status?.sets || 0).toLocaleString(locale())}
+          icon={MapIcon}
+        />
+        <Stat
+          label={t("COLLECTIONS")}
+          value={String(status?.collections || 0)}
+          icon={FolderHeart}
+        />
+        <Stat
+          label={t("TENTATIVES OBSERVÉES")}
+          value={String(status?.plays || 0)}
+          icon={Activity}
+        />
+      </div>
+      {status?.index.running && (
+        <div className="index-progress">
+          <LoaderCircle size={16} className="spin" />
+          <span>
+            {status.index.phase === "collections"
+              ? t("Lecture des collections")
+              : t("Lecture des maps")}{" "}
+            · {status.index.processed.toLocaleString(locale())} {t("fichiers")}
+          </span>
+          <div className="indeterminate" />
+        </div>
+      )}
+      {status?.index.phase === "error" && <div className="error-box">{status.index.message}</div>}
+      <section className="search-panel">
+        <div className="source-tabs">
+          {(
+            [
+              ["local", t("Installées"), FolderOpen],
+              ["cached", t("Catalogue"), Database],
+              ["new", t("Découvrir"), Sparkles],
+            ] as const
+          ).map(([id, label, Icon]) => (
+            <button
+              key={id}
+              aria-pressed={source === id}
+              className={source === id ? "active" : ""}
+              onClick={() => setSource(id)}
+            >
+              <Icon size={15} />
+              {label}
+              {id === "local" && <span>{status?.installed || 0}</span>}
+            </button>
+          ))}
+          <span className="source-note">
+            {source === "new"
+              ? t("Réseau sur demande · 5 appels / min")
+              : t("Recherche locale · aucun appel API")}
+          </span>
+        </div>
+        <div className="search-input">
+          <Search size={21} />
+          <input
+            aria-label={t("Rechercher des maps")}
+            placeholder={t("Artiste, titre, mapper… ou stars>=5 bpm>180")}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && source === "new") void discover();
+            }}
+          />
+          {query && (
+            <button
+              className="icon-button"
+              title={t("Effacer la recherche")}
+              onClick={() => setQuery("")}
+            >
+              <X size={16} />
+            </button>
+          )}
+          <button
+            className={`icon-button ${help ? "selected" : ""}`}
+            aria-expanded={help}
+            onClick={() => setHelp(!help)}
+            title={t("Syntaxe de recherche")}
+          >
+            <CircleHelp size={18} />
+          </button>
+        </div>
+        {help && (
+          <div className="search-help">
+            <code>{t("stars>=5 stars<6.5")}</code>
+            <code>{t("bpm>180 length<180")}</code>
+            <code>{t('collection:"DT farm"')}</code>
+            <code>{t("played=false")}</code>
+            <code>tags="stream" source="Touhou"</code>
+            <p>
+              {t(
+                "Champs : stars, bpm, length (secondes), ar, od, cs, hp, objects, artist, title, creator, version, tag, status, local, played. Les filtres avancés de PP arriveront avec le profil joueur.",
+              )}
+            </p>
+          </div>
+        )}
+        <div className="filter-row">
+          <span className="filter-label">{t("Mode")}</span>
+          <div className="chips">
+            {[["any", t("Tous")], ...modes.map((name, i) => [String(i), name])].map(
+              ([value, label]) => (
+                <button
+                  key={value}
+                  aria-pressed={mode === value}
+                  className={mode === value ? "active" : ""}
+                  onClick={() => setMode(value)}
+                >
+                  {label}
+                </button>
+              ),
+            )}
+          </div>
+          <button
+            className={`more-filters ${advanced ? "active" : ""}`}
+            aria-expanded={advanced}
+            onClick={() => setAdvanced(!advanced)}
+          >
+            <SlidersHorizontal size={14} />
+            {t("Filtres")}
+          </button>
+        </div>
+        <div className="filter-row">
+          <span className="filter-label">{t("Statut")}</span>
+          <div className="chips">
+            {[
+              ["any", t("Tous")],
+              ["ranked", "Ranked"],
+              ["loved", "Loved"],
+              ["qualified", "Qualified"],
+              ["pending", "Pending"],
+              ["graveyard", "Graveyard"],
+            ].map(([value, label]) => (
+              <button
+                key={value}
+                aria-pressed={category === value}
+                className={category === value ? "active" : ""}
+                onClick={() => setCategory(value)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+        {advanced && (
+          <>
+            <div className="advanced-filters">
+              <label>
+                {t("Collection")}
+                <select value={collection} onChange={(e) => setCollection(e.target.value)}>
+                  <option value="">{t("Toutes les collections")}</option>
+                  {collections.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name} ({c.installed}/{c.total})
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <div>
+                <span className="field-label">{t("Raccourcis")}</span>
+                <div className="chips">
+                  {[
+                    [t("Jamais observée"), "played=false"],
+                    [t("Courte (< 2 min)"), "length<120"],
+                    ["5–6 ★", "stars>=5 stars<6"],
+                  ].map(([name, predicate]) => (
+                    <button
+                      key={name}
+                      onClick={() => setQuery(query ? `${query} ${predicate}` : predicate)}
+                    >
+                      {name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <MetadataFilters query={query} onChange={setQuery} />
+          </>
+        )}
+        {source === "new" && (
+          <div className="discovery-row">
+            <p>{t("Les découvertes restent dans le catalogue, même sans téléchargement.")}</p>
+            <button
+              className="primary-button small"
+              onClick={() => void discover()}
+              disabled={discovering}
+            >
+              {discovering ? <LoaderCircle size={14} className="spin" /> : <Sparkles size={14} />}
+              {t("Chercher en ligne")}
+            </button>
+            {hasMore && (
+              <button
+                className="secondary-button small"
+                onClick={() => void discover(true)}
+                disabled={discovering}
+              >
+                {t("Découvrir davantage")}
+              </button>
+            )}
+          </div>
+        )}
+      </section>
+      <div className="results-toolbar">
+        <div>
+          <span className="results-number">{total.toLocaleString(locale())}</span>{" "}
+          {t("difficultés")}{" "}
+          <span className="muted">
+            {collection
+              ? `· ${collections.find((c) => String(c.id) === collection)?.name || t("Collection")}`
+              : t("· à explorer")}
+          </span>
+          {result.isFetching && <LoaderCircle className="spin" size={14} />}
+        </div>
+        <div className="sort-tools">
+          <ArrowDownUp size={14} />
+          <select
+            aria-label={t("Trier les maps")}
+            value={sort}
+            onChange={(e) => setSort(e.target.value)}
+          >
+            <option value="title">{t("Titre")}</option>
+            <option value="artist">{t("Artiste")}</option>
+            <option value="difficulty">{t("Difficulté")}</option>
+            <option value="length">{t("Durée")}</option>
+            <option value="bpm">BPM</option>
+            <option value="recent">{t("Ajout récent")}</option>
+            <option value="played">{t("Dernier play")}</option>
+          </select>
+          <div className="view-toggle">
+            <button
+              title={t("Grille")}
+              aria-pressed={view === "grid"}
+              className={view === "grid" ? "active" : ""}
+              onClick={() => setView("grid")}
+            >
+              <Grid2X2 size={16} />
+            </button>
+            <button
+              title={t("Liste")}
+              aria-pressed={view === "list"}
+              className={view === "list" ? "active" : ""}
+              onClick={() => setView("list")}
+            >
+              <List size={17} />
+            </button>
+          </div>
+        </div>
+      </div>
+      {result.isPending ? (
+        <div className="catalog-loading" role="status">
+          <LoaderCircle className="spin" size={18} />
+          {t("Chargement des maps…")}
+        </div>
+      ) : result.isError && !groups.length ? (
+        <div className="error-box">
+          {result.error.message}
+          <button className="secondary-button small" onClick={() => void result.refetch()}>
+            {t("Réessayer")}
+          </button>
+        </div>
+      ) : groups.length ? (
+        <div className={`map-grid ${view === "list" ? "list-view" : ""}`}>
+          {groups.map((maps) => (
+            <MapCard
+              key={maps[0].key}
+              maps={maps}
+              onSelect={onSelect}
+              allowFetch={source === "new"}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="empty-library">
+          <div className="empty-orbits">
+            <span />
+            <span />
+            <span />
+            <MapIcon size={33} />
+          </div>
+          <div className="eyebrow">{t("UN CATALOGUE QUI GRANDIT AVEC TOI")}</div>
+          <h2>
+            {query || collection || category !== "any" || mode !== "any"
+              ? t("Aucune map avec ces filtres.")
+              : source === "local"
+                ? t("Ta bibliothèque commence ici.")
+                : t("Encore aucune map dans cette vue.")}
+          </h2>
+          <p>
+            {source === "local"
+              ? t(
+                  "Choisis ton profil stable ou lazer dans les Réglages, puis indexe tes maps, images et collections sur ce PC.",
+                )
+              : t(
+                  "Les maps découvertes en ligne seront conservées ici, prêtes pour une prochaine recherche.",
+                )}
+          </p>
+          <button className="primary-button" onClick={onSettings}>
+            <FolderOpen size={17} />
+            {t("Configurer osu!")}
+            <ArrowRight size={15} />
+          </button>
+          <span className="empty-footnote">
+            {t("Tes fichiers de jeu sont lus, jamais modifiés.")}
+          </span>
+        </div>
+      )}
+      {groups.length > 0 && (
+        <div ref={sentinel} className="catalog-load-more" aria-live="polite">
+          <span>
+            {groups.length.toLocaleString(locale())} / {totalSets.toLocaleString(locale())}{" "}
+            {t("sets affichés")}
+          </span>
+          {result.isFetchingNextPage ? (
+            <span role="status">
+              <LoaderCircle className="spin" size={16} />
+              {t("Chargement de 20 sets supplémentaires…")}
+            </span>
+          ) : result.isFetchNextPageError ? (
+            <>
+              <span className="error-box">{result.error.message}</span>
+              <button
+                className="secondary-button"
+                onClick={() => void result.fetchNextPage({ cancelRefetch: false })}
+              >
+                {t("Réessayer")}
+              </button>
+            </>
+          ) : result.hasNextPage ? (
+            <button
+              className="secondary-button"
+              disabled={result.isFetching}
+              onClick={() => void result.fetchNextPage({ cancelRefetch: false })}
+            >
+              {t("Charger 20 sets supplémentaires")}
+            </button>
+          ) : (
+            <span>{t("Fin des résultats")}</span>
+          )}
+        </div>
+      )}
+    </>
+  );
 }
-function Stat({ label, value, icon: Icon }: { label: string; value: string; icon: typeof MapIcon }) { return <div className="stat"><Icon size={17} /><div><strong>{value}</strong><span>{label}</span></div></div>; }
-function MapCard({ maps, onSelect, allowFetch = false }: { maps: Beatmap[]; onSelect: (m: Beatmap) => void; allowFetch?: boolean }) {
-  const map = maps[0], cover = coverUrl(map, allowFetch);
-  return <article className="map-card" style={{ '--map-color': starColor(map.stars) } as React.CSSProperties}>
-    <button className={`card-image ${cover ? '' : 'no-cover'}`} onClick={() => onSelect(map)} aria-label={t('Ouvrir {{title}}', { title: map.title })}>{cover ? <img src={cover} alt="" loading="lazy" onError={e => e.currentTarget.style.display = 'none'} /> : <AudioLines size={38} />}<span className="card-gradient" /><span className={`ranked-badge ${map.status}`}>{map.status.toUpperCase()}</span><span className="card-presence">{map.local ? <><Check size={11} />{t("Installée")}</> : <><Database size={11} />{t("En cache")}</>}</span></button>
-    <button className="card-title" onClick={() => onSelect(map)}><h3>{map.title}</h3><p>{map.artist}</p></button><div className="mapper">{t("mapped by")} <span>{map.creator || t("inconnu")}</span></div>
-    <div className="difficulty-row"><div className="difficulty-dots">{maps.slice(0, 12).map(m => <button key={m.key} style={{ background: starColor(m.stars) }} title={`${m.version} · ${m.stars?.toFixed(2) ?? '?'} ★`} onClick={() => onSelect(m)} aria-label={t("Difficulté {{p0}}", { p0: m.version })} />)}</div><span>{modes[map.mode]}</span><span className="difficulty-rating"><Star size={11} fill="currentColor" />{map.stars?.toFixed(2) ?? '—'}</span></div>
-    <div className="card-meta"><span><Clock3 size={12} />{formatTime(map.length)}</span><span>{map.bpm ? Math.round(map.bpm) : '—'} BPM</span>{map.collections.length > 0 && <span title={map.collections.join(', ')}><FolderHeart size={12} />{map.collections.length}</span>}<span className="card-played">{map.played ? t("Jouée") : t('À essayer')}</span></div>
-    {map.reason && <div className="card-reason"><Sparkles size={13} />{map.reason}</div>}
-  </article>;
+function Stat({
+  label,
+  value,
+  icon: Icon,
+}: {
+  label: string;
+  value: string;
+  icon: typeof MapIcon;
+}) {
+  return (
+    <div className="stat">
+      <Icon size={17} />
+      <div>
+        <strong>{value}</strong>
+        <span>{label}</span>
+      </div>
+    </div>
+  );
+}
+function MapCard({
+  maps,
+  onSelect,
+  allowFetch = false,
+}: {
+  maps: Beatmap[];
+  onSelect: (m: Beatmap) => void;
+  allowFetch?: boolean;
+}) {
+  const map = maps[0],
+    cover = coverUrl(map, allowFetch);
+  return (
+    <article
+      className="map-card"
+      style={{ "--map-color": starColor(map.stars) } as React.CSSProperties}
+    >
+      <button
+        className={`card-image ${cover ? "" : "no-cover"}`}
+        onClick={() => onSelect(map)}
+        aria-label={t("Ouvrir {{title}}", { title: map.title })}
+      >
+        {cover ? (
+          <img
+            src={cover}
+            alt=""
+            loading="lazy"
+            onError={(e) => (e.currentTarget.style.display = "none")}
+          />
+        ) : (
+          <AudioLines size={38} />
+        )}
+        <span className="card-gradient" />
+        <span className={`ranked-badge ${map.status}`}>{map.status.toUpperCase()}</span>
+        <span className="card-presence">
+          {map.local ? (
+            <>
+              <Check size={11} />
+              {t("Installée")}
+            </>
+          ) : (
+            <>
+              <Database size={11} />
+              {t("En cache")}
+            </>
+          )}
+        </span>
+      </button>
+      <button className="card-title" onClick={() => onSelect(map)}>
+        <h3>{map.title}</h3>
+        <p>{map.artist}</p>
+      </button>
+      <div className="mapper">
+        {t("mapped by")} <span>{map.creator || t("inconnu")}</span>
+      </div>
+      <div className="difficulty-row">
+        <div className="difficulty-dots">
+          {maps.slice(0, 12).map((m) => (
+            <button
+              key={m.key}
+              style={{ background: starColor(m.stars) }}
+              title={`${m.version} · ${m.stars?.toFixed(2) ?? "?"} ★`}
+              onClick={() => onSelect(m)}
+              aria-label={t("Difficulté {{p0}}", { p0: m.version })}
+            />
+          ))}
+        </div>
+        <span>{modes[map.mode]}</span>
+        <span className="difficulty-rating">
+          <Star size={11} fill="currentColor" />
+          {map.stars?.toFixed(2) ?? "—"}
+        </span>
+      </div>
+      <div className="card-meta">
+        <span>
+          <Clock3 size={12} />
+          {formatTime(map.length)}
+        </span>
+        <span>{map.bpm ? Math.round(map.bpm) : "—"} BPM</span>
+        {map.collections.length > 0 && (
+          <span title={map.collections.join(", ")}>
+            <FolderHeart size={12} />
+            {map.collections.length}
+          </span>
+        )}
+        <span className="card-played">{map.played ? t("Jouée") : t("À essayer")}</span>
+      </div>
+      {map.reason && (
+        <div className="card-reason">
+          <Sparkles size={13} />
+          {map.reason}
+        </div>
+      )}
+    </article>
+  );
 }
 
-function Recommendations({ onSelect, notify }: { onSelect: (m: Beatmap) => void; notify: (s: string) => void }) {
-  const [source, setSource] = useState<Source>('local'), [target, setTarget] = useState(5.5), [mode, setMode] = useState('0'), [objective, setObjective] = useState('farm'), [query, setQuery] = useState('');
-  const preferences = useQuery({ queryKey: ['settings'], queryFn: () => api<SettingsResponse>('/api/settings') });
-  useEffect(() => { if (preferences.data) setTarget(preferences.data.settings.targetStars); }, [preferences.data]);
-  const [result, setResult] = useState<{ maps: Beatmap[]; note: string } | null>(null), [busy, setBusy] = useState(false);
-  const suggest = async () => { setBusy(true); try { if (source === 'new') await api('/api/discover', { q: `${query} stars>=${Math.max(0, target - 1)} stars<=${target + 1}`.trim(), mode, status: 'ranked' }); setResult(await api('/api/recommend', { source, target, mode, objective, q: query })); } catch (e) { notify((e as Error).message); } finally { setBusy(false); } };
-  return <><div className="page-heading"><div><div className="eyebrow"><span /> {t("A LITTLE DIRECTION")}</div><h1>{t("Une sélection pour toi")}<span>.</span></h1><p>{t("Cinq maps, une difficulté cible, de nouvelles possibilités.")}</p></div><Sparkles className="heading-icon" size={42} /></div><div className="recommend-panel"><div className="section-title"><Target size={18} /><h2>{t("Préparer ta sélection")}</h2><span className="badge">{t("Moteur initial")}</span></div><div className="recommendation-search"><label>{t("Recherche et métadonnées")}<input value={query} onChange={event => setQuery(event.target.value)} placeholder={t("Artiste, titre, tags, mapper…")} /></label><MetadataFilters query={query} onChange={setQuery} /></div><div className="form-grid"><label>{t("Objectif")}<select value={objective} onChange={e => setObjective(e.target.value)}><option value="farm">{t("Farm")}</option><option value="improve">{t("Rejouer et améliorer")}</option><option value="discovery">{t("Découverte")}</option><option value="training">{t("Entraînement")}</option></select></label><label>{t("Source")}<select value={source} onChange={e => setSource(e.target.value as Source)}><option value="local">{t("Installées uniquement")}</option><option value="cached">{t("Catalogue en cache")}</option><option value="new">{t("Non installées + découverte")}</option></select></label><label>{t("Mode")}<select value={mode} onChange={e => setMode(e.target.value)}>{modes.map((m, i) => <option key={m} value={i}>{m}</option>)}</select></label></div><div className="target-slider"><label>{t("Difficulté cible")} <strong>{target.toFixed(1)} <Star size={14} fill="currentColor" /></strong></label><input type="range" min="1" max="12" step="0.1" value={target} onChange={e => setTarget(Number(e.target.value))} /><div><span>1 ★</span><span>12 ★</span></div></div><div className="recommend-bottom"><p>{t("La sélection actuelle utilise les étoiles NM, l’historique connu et la diversité des sets. La modélisation du profil et des gains de PP est prévue ensuite.")}</p><button className="primary-button" onClick={() => void suggest()} disabled={busy}>{busy ? <LoaderCircle size={16} className="spin" /> : <Sparkles size={16} />}{t("Recommander 5 maps")}</button></div></div>{result ? <><div className="results-toolbar"><div><strong>{result.maps.length}</strong> {t("suggestions")} <span className="muted">{t("· cinq sets maximum")}</span></div></div>{result.maps.length ? <div className="map-grid">{result.maps.map(m => <MapCard key={m.key} maps={[m]} onSelect={onSelect} />)}</div> : <div className="empty-panel"><Target size={30} /><h2>{t("Pas assez de difficultés connues.")}</h2><p>{t("Indexe la bibliothèque ou élargis la difficulté cible. Ouvrir une map puis calculer son analyse renseigne ses étoiles si elles sont absentes.")}</p></div>}</> : <div className="recommend-intro"><div><span>01</span><h3>{t("Une cible claire")}</h3><p>{t("Les contraintes réduisent le catalogue aux maps pertinentes.")}</p></div><div><span>02</span><h3>{t("Un peu de variété")}</h3><p>{t("Un seul résultat par set pour explorer plusieurs morceaux.")}</p></div><div><span>03</span><h3>{t("Une raison visible")}</h3><p>{t("Chaque proposition indique les critères de sa sélection.")}</p></div></div>}</>;
+function Recommendations({
+  onSelect,
+  notify,
+}: {
+  onSelect: (m: Beatmap) => void;
+  notify: (s: string) => void;
+}) {
+  const [source, setSource] = useState<Source>("local"),
+    [target, setTarget] = useState(5.5),
+    [mode, setMode] = useState("0"),
+    [objective, setObjective] = useState("farm"),
+    [query, setQuery] = useState("");
+  const preferences = useQuery({
+    queryKey: ["settings"],
+    queryFn: () => api<SettingsResponse>("/api/settings"),
+  });
+  useEffect(() => {
+    if (preferences.data) setTarget(preferences.data.settings.targetStars);
+  }, [preferences.data]);
+  const [result, setResult] = useState<{ maps: Beatmap[]; note: string } | null>(null),
+    [busy, setBusy] = useState(false);
+  const suggest = async () => {
+    setBusy(true);
+    try {
+      if (source === "new")
+        await api("/api/discover", {
+          q: `${query} stars>=${Math.max(0, target - 1)} stars<=${target + 1}`.trim(),
+          mode,
+          status: "ranked",
+        });
+      setResult(await api("/api/recommend", { source, target, mode, objective, q: query }));
+    } catch (e) {
+      notify((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <>
+      <div className="page-heading">
+        <div>
+          <div className="eyebrow">
+            <span /> {t("A LITTLE DIRECTION")}
+          </div>
+          <h1>
+            {t("Une sélection pour toi")}
+            <span>.</span>
+          </h1>
+          <p>{t("Cinq maps, une difficulté cible, de nouvelles possibilités.")}</p>
+        </div>
+        <Sparkles className="heading-icon" size={42} />
+      </div>
+      <div className="recommend-panel">
+        <div className="section-title">
+          <Target size={18} />
+          <h2>{t("Préparer ta sélection")}</h2>
+          <span className="badge">{t("Moteur initial")}</span>
+        </div>
+        <div className="recommendation-search">
+          <label>
+            {t("Recherche et métadonnées")}
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder={t("Artiste, titre, tags, mapper…")}
+            />
+          </label>
+          <MetadataFilters query={query} onChange={setQuery} />
+        </div>
+        <div className="form-grid">
+          <label>
+            {t("Objectif")}
+            <select value={objective} onChange={(e) => setObjective(e.target.value)}>
+              <option value="farm">{t("Farm")}</option>
+              <option value="improve">{t("Rejouer et améliorer")}</option>
+              <option value="discovery">{t("Découverte")}</option>
+              <option value="training">{t("Entraînement")}</option>
+            </select>
+          </label>
+          <label>
+            {t("Source")}
+            <select value={source} onChange={(e) => setSource(e.target.value as Source)}>
+              <option value="local">{t("Installées uniquement")}</option>
+              <option value="cached">{t("Catalogue en cache")}</option>
+              <option value="new">{t("Non installées + découverte")}</option>
+            </select>
+          </label>
+          <label>
+            {t("Mode")}
+            <select value={mode} onChange={(e) => setMode(e.target.value)}>
+              {modes.map((m, i) => (
+                <option key={m} value={i}>
+                  {m}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+        <div className="target-slider">
+          <label>
+            {t("Difficulté cible")}{" "}
+            <strong>
+              {target.toFixed(1)} <Star size={14} fill="currentColor" />
+            </strong>
+          </label>
+          <input
+            type="range"
+            min="1"
+            max="12"
+            step="0.1"
+            value={target}
+            onChange={(e) => setTarget(Number(e.target.value))}
+          />
+          <div>
+            <span>1 ★</span>
+            <span>12 ★</span>
+          </div>
+        </div>
+        <div className="recommend-bottom">
+          <p>
+            {t(
+              "La sélection actuelle utilise les étoiles NM, l’historique connu et la diversité des sets. La modélisation du profil et des gains de PP est prévue ensuite.",
+            )}
+          </p>
+          <button className="primary-button" onClick={() => void suggest()} disabled={busy}>
+            {busy ? <LoaderCircle size={16} className="spin" /> : <Sparkles size={16} />}
+            {t("Recommander 5 maps")}
+          </button>
+        </div>
+      </div>
+      {result ? (
+        <>
+          <div className="results-toolbar">
+            <div>
+              <strong>{result.maps.length}</strong> {t("suggestions")}{" "}
+              <span className="muted">{t("· cinq sets maximum")}</span>
+            </div>
+          </div>
+          {result.maps.length ? (
+            <div className="map-grid">
+              {result.maps.map((m) => (
+                <MapCard key={m.key} maps={[m]} onSelect={onSelect} />
+              ))}
+            </div>
+          ) : (
+            <div className="empty-panel">
+              <Target size={30} />
+              <h2>{t("Pas assez de difficultés connues.")}</h2>
+              <p>
+                {t(
+                  "Indexe la bibliothèque ou élargis la difficulté cible. Ouvrir une map puis calculer son analyse renseigne ses étoiles si elles sont absentes.",
+                )}
+              </p>
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="recommend-intro">
+          <div>
+            <span>01</span>
+            <h3>{t("Une cible claire")}</h3>
+            <p>{t("Les contraintes réduisent le catalogue aux maps pertinentes.")}</p>
+          </div>
+          <div>
+            <span>02</span>
+            <h3>{t("Un peu de variété")}</h3>
+            <p>{t("Un seul résultat par set pour explorer plusieurs morceaux.")}</p>
+          </div>
+          <div>
+            <span>03</span>
+            <h3>{t("Une raison visible")}</h3>
+            <p>{t("Chaque proposition indique les critères de sa sélection.")}</p>
+          </div>
+        </div>
+      )}
+    </>
+  );
 }
 
-
-function MapDetail({ map, onClose, onSelect }: { map: Beatmap; onClose: () => void; onSelect: (m: Beatmap) => void }) {
-  const detail = useQuery({ queryKey: ['detail', map.key], queryFn: () => api<{ map: Beatmap; difficulties: Beatmap[]; plays: Play[]; preview: number }>('/api/maps/' + encodeURIComponent(map.key)) });
-  const [mods, setMods] = useState('NM'), [analysis, setAnalysis] = useState<Analysis | null>(null), [busy, setBusy] = useState(false), [error, setError] = useState('');
-  const preferences = useQuery({ queryKey: ['settings'], queryFn: () => api<SettingsResponse>('/api/settings') });
-  useEffect(() => { if (preferences.data) setMods(preferences.data.settings.preferredMods); }, [preferences.data]);
+function MapDetail({
+  map,
+  onClose,
+  onSelect,
+}: {
+  map: Beatmap;
+  onClose: () => void;
+  onSelect: (m: Beatmap) => void;
+}) {
+  const detail = useQuery({
+    queryKey: ["detail", map.key],
+    queryFn: () =>
+      api<{ map: Beatmap; difficulties: Beatmap[]; plays: Play[]; preview: number }>(
+        "/api/maps/" + encodeURIComponent(map.key),
+      ),
+  });
+  const [mods, setMods] = useState("NM"),
+    [analysis, setAnalysis] = useState<Analysis | null>(null),
+    [busy, setBusy] = useState(false),
+    [error, setError] = useState("");
+  const preferences = useQuery({
+    queryKey: ["settings"],
+    queryFn: () => api<SettingsResponse>("/api/settings"),
+  });
+  useEffect(() => {
+    if (preferences.data) setMods(preferences.data.settings.preferredMods);
+  }, [preferences.data]);
   const drawer = useRef<HTMLDialogElement>(null);
-  useEffect(() => { drawer.current?.showModal(); return () => drawer.current?.close(); }, []);
-  const audio = useRef<HTMLAudioElement>(null); const client = useQueryClient(); const m = detail.data?.map || map;
-  useEffect(() => { setAnalysis(null); setError(''); }, [map.key]);
+  useEffect(() => {
+    drawer.current?.showModal();
+    return () => drawer.current?.close();
+  }, []);
+  const audio = useRef<HTMLAudioElement>(null);
+  const client = useQueryClient();
+  const m = detail.data?.map || map;
+  useEffect(() => {
+    setAnalysis(null);
+    setError("");
+  }, [map.key]);
 
-  useEffect(() => { setAnalysis(null); }, [mods, preferences.data?.settings.client]);
-  const calculate = async () => { setBusy(true); setError(''); try { setAnalysis(await api<Analysis>(`/api/maps/${encodeURIComponent(m.key)}/analysis`, { mods })); await client.invalidateQueries({ queryKey: ['maps'] }); } catch (e) { setError((e as Error).message); } finally { setBusy(false); } };
+  useEffect(() => {
+    setAnalysis(null);
+  }, [mods, preferences.data?.settings.client]);
+  const calculate = async () => {
+    setBusy(true);
+    setError("");
+    try {
+      setAnalysis(await api<Analysis>(`/api/maps/${encodeURIComponent(m.key)}/analysis`, { mods }));
+      await client.invalidateQueries({ queryKey: ["maps"] });
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  };
   const cover = coverUrl(m, true);
-  return <dialog ref={drawer} className="drawer-backdrop drawer-dialog" aria-label={t("Détails de {{title}}", { title: m.title })} onCancel={event => { event.preventDefault(); onClose(); }} onClick={onClose}><aside className="map-drawer" onClick={e => e.stopPropagation()}><button className="drawer-close icon-button" onClick={onClose} aria-label={t("Fermer")}><X size={20} /></button><div className="drawer-cover">{cover && <img src={cover} alt="" />}<div /><span className={`ranked-badge ${m.status}`}>{m.status.toUpperCase()}</span><h2>{m.title}</h2><p>{m.artist}</p></div><div className="drawer-content"><div className="drawer-byline">{t("mapped by")} <strong>{m.creator}</strong><span>{m.local ? t("Installée") : t("Métadonnées en cache")}</span></div><div className="drawer-actions">{m.beatmapId && <a className="primary-button small" href={`osu://b/${m.beatmapId}`}><PlayIcon size={14} />{t("Ouvrir dans osu!")}</a>}{m.setId && <a className="secondary-button small" href={`https://osu.ppy.sh/beatmapsets/${m.setId}`} target="_blank" rel="noreferrer"><ExternalLink size={14} />{t("Page officielle")}</a>}{!m.local && m.setId && <a className="secondary-button small" href={`https://osu.ppy.sh/beatmapsets/${m.setId}`} target="_blank" rel="noreferrer"><Download size={14} />{t("Télécharger sur osu!")}</a>}</div><div className="drawer-section"><h3>{t("Difficultés du set")}</h3><div className="difficulty-buttons">{(detail.data?.difficulties || [m]).map(d => <button key={d.key} className={d.key === m.key ? 'active' : ''} onClick={() => onSelect(d)}><i style={{ background: starColor(d.stars) }} /><span>{d.version}</span><strong>{d.stars?.toFixed(2) || '?'}</strong>{!d.local && <Database size={12} />}</button>)}</div></div><div className="map-facts">{[[t("Étoiles NM"), m.stars?.toFixed(2) || '—'], ['BPM', m.bpm?.toFixed(0) || '—'], [t("Durée indicative"), formatTime(m.length)], [t('Objets'), String(m.objects)], ['AR', String(m.ar)], ['OD', String(m.od)], ['CS', String(m.cs)], ['HP', String(m.hp)]].map(([label, value]) => <div key={label}><span>{label}</span><strong>{value}</strong></div>)}</div>{m.local && <div className="drawer-section"><h3>{t("Audio local")}</h3><audio ref={audio} controls preload="none" src={`/api/assets/${encodeURIComponent(m.key)}/audio`} onLoadedMetadata={() => { if (audio.current && detail.data && detail.data.preview > 0) audio.current.currentTime = detail.data.preview / 1000; }} /></div>}{m.collections.length > 0 && <div className="drawer-section"><h3>{t("Collections")}</h3><div className="chips">{m.collections.map(c => <span className="tag" key={c}><FolderHeart size={12} />{c}</span>)}</div></div>}<div className="drawer-section"><div className="section-title"><Activity size={17} /><h3>{t("Difficulté & simulation de PP")}</h3></div><div className="analysis-controls"><select aria-label={t("Mods du calcul")} value={mods} onChange={e => setMods(e.target.value)}>{['NM', 'HD', 'HR', 'DT', 'HDDT', 'HDHR', 'HT', 'EZ'].map(v => <option key={v}>{v}</option>)}</select><button className="primary-button small" disabled={!m.local || busy} onClick={() => void calculate()}>{busy ? <LoaderCircle className="spin" size={14} /> : <Activity size={14} />}{t("Calculer localement")}</button></div>{!m.local && <p className="muted">{t("Le fichier .osu est nécessaire pour ce calcul. Les métadonnées seules restent disponibles.")}</p>}{error && <div className="error-box">{error}</div>}{analysis && <><div className="analysis-summary"><span><Star size={14} fill="currentColor" />{analysis.stars.toFixed(2)} {t("★ avec")} {mods}</span><span>{analysis.maxCombo}{t("× max")}</span></div><Chart label={t("Strain de difficulté de la map")} series={['aim', 'speed', 'strain'].map((field, i) => ({ name: [t("Aim"), t("Speed"), t("Strain")][i], color: ['#deb0e9', '#8dbbb3', '#e8c389'][i], points: analysis.strains.filter(s => (s as any)[field] !== undefined).map(s => ({ x: s.time, y: (s as any)[field] })) })).filter(s => s.points.length)} /><div className="pp-scenarios">{analysis.pp.map(p => <div key={p.accuracy}><span>{p.accuracy} %</span><strong>{Math.round(p.pp)}<small> pp</small></strong></div>)}</div><p className="fine-print">{t("Scénarios sans miss calculés pour")} {analysis.client} · {analysis.engine}{t(". Ce sont des estimations locales.")}</p></>}</div><div className="drawer-section map-metadata"><h3>{t("Métadonnées")}</h3><dl><dt>{t("Source du morceau")}</dt><dd>{m.source || '—'}</dd><dt>{t("Tags de la map")}</dt><dd>{m.tags || '—'}</dd></dl></div><div className="drawer-section"><h3>{t("Tentatives observées")} <span className="muted">({detail.data?.plays.length || 0})</span></h3>{detail.data?.plays.length ? detail.data.plays.map(p => <div className="mini-play" key={p.id}><span>{t(outcomes[p.outcome])}</span><strong>{p.accuracy.toFixed(2)} %</strong><span>{p.misses} {t("misses")}</span><span>{p.mods}</span></div>) : <p className="muted">{t("Aucune tentative enregistrée pour cette version de la map.")}</p>}</div><div className="checksum"><Database size={12} />{m.checksum}</div></div></aside></dialog>;
+  return (
+    <dialog
+      ref={drawer}
+      className="drawer-backdrop drawer-dialog"
+      aria-label={t("Détails de {{title}}", { title: m.title })}
+      onCancel={(event) => {
+        event.preventDefault();
+        onClose();
+      }}
+      onClick={onClose}
+    >
+      <aside className="map-drawer" onClick={(e) => e.stopPropagation()}>
+        <button className="drawer-close icon-button" onClick={onClose} aria-label={t("Fermer")}>
+          <X size={20} />
+        </button>
+        <div className="drawer-cover">
+          {cover && <img src={cover} alt="" />}
+          <div />
+          <span className={`ranked-badge ${m.status}`}>{m.status.toUpperCase()}</span>
+          <h2>{m.title}</h2>
+          <p>{m.artist}</p>
+        </div>
+        <div className="drawer-content">
+          <div className="drawer-byline">
+            {t("mapped by")} <strong>{m.creator}</strong>
+            <span>{m.local ? t("Installée") : t("Métadonnées en cache")}</span>
+          </div>
+          <div className="drawer-actions">
+            {m.beatmapId && (
+              <a className="primary-button small" href={`osu://b/${m.beatmapId}`}>
+                <PlayIcon size={14} />
+                {t("Ouvrir dans osu!")}
+              </a>
+            )}
+            {m.setId && (
+              <a
+                className="secondary-button small"
+                href={`https://osu.ppy.sh/beatmapsets/${m.setId}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <ExternalLink size={14} />
+                {t("Page officielle")}
+              </a>
+            )}
+            {!m.local && m.setId && (
+              <a
+                className="secondary-button small"
+                href={`https://osu.ppy.sh/beatmapsets/${m.setId}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                <Download size={14} />
+                {t("Télécharger sur osu!")}
+              </a>
+            )}
+          </div>
+          <div className="drawer-section">
+            <h3>{t("Difficultés du set")}</h3>
+            <div className="difficulty-buttons">
+              {(detail.data?.difficulties || [m]).map((d) => (
+                <button
+                  key={d.key}
+                  className={d.key === m.key ? "active" : ""}
+                  onClick={() => onSelect(d)}
+                >
+                  <i style={{ background: starColor(d.stars) }} />
+                  <span>{d.version}</span>
+                  <strong>{d.stars?.toFixed(2) || "?"}</strong>
+                  {!d.local && <Database size={12} />}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="map-facts">
+            {[
+              [t("Étoiles NM"), m.stars?.toFixed(2) || "—"],
+              ["BPM", m.bpm?.toFixed(0) || "—"],
+              [t("Durée indicative"), formatTime(m.length)],
+              [t("Objets"), String(m.objects)],
+              ["AR", String(m.ar)],
+              ["OD", String(m.od)],
+              ["CS", String(m.cs)],
+              ["HP", String(m.hp)],
+            ].map(([label, value]) => (
+              <div key={label}>
+                <span>{label}</span>
+                <strong>{value}</strong>
+              </div>
+            ))}
+          </div>
+          {m.local && (
+            <div className="drawer-section">
+              <h3>{t("Audio local")}</h3>
+              <audio
+                ref={audio}
+                controls
+                preload="none"
+                src={`/api/assets/${encodeURIComponent(m.key)}/audio`}
+                onLoadedMetadata={() => {
+                  if (audio.current && detail.data && detail.data.preview > 0)
+                    audio.current.currentTime = detail.data.preview / 1000;
+                }}
+              />
+            </div>
+          )}
+          {m.collections.length > 0 && (
+            <div className="drawer-section">
+              <h3>{t("Collections")}</h3>
+              <div className="chips">
+                {m.collections.map((c) => (
+                  <span className="tag" key={c}>
+                    <FolderHeart size={12} />
+                    {c}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+          <div className="drawer-section">
+            <div className="section-title">
+              <Activity size={17} />
+              <h3>{t("Difficulté & simulation de PP")}</h3>
+            </div>
+            <div className="analysis-controls">
+              <select
+                aria-label={t("Mods du calcul")}
+                value={mods}
+                onChange={(e) => setMods(e.target.value)}
+              >
+                {["NM", "HD", "HR", "DT", "HDDT", "HDHR", "HT", "EZ"].map((v) => (
+                  <option key={v}>{v}</option>
+                ))}
+              </select>
+              <button
+                className="primary-button small"
+                disabled={!m.local || busy}
+                onClick={() => void calculate()}
+              >
+                {busy ? <LoaderCircle className="spin" size={14} /> : <Activity size={14} />}
+                {t("Calculer localement")}
+              </button>
+            </div>
+            {!m.local && (
+              <p className="muted">
+                {t(
+                  "Le fichier .osu est nécessaire pour ce calcul. Les métadonnées seules restent disponibles.",
+                )}
+              </p>
+            )}
+            {error && <div className="error-box">{error}</div>}
+            {analysis && (
+              <>
+                <div className="analysis-summary">
+                  <span>
+                    <Star size={14} fill="currentColor" />
+                    {analysis.stars.toFixed(2)} {t("★ avec")} {mods}
+                  </span>
+                  <span>
+                    {analysis.maxCombo}
+                    {t("× max")}
+                  </span>
+                </div>
+                <Chart
+                  label={t("Strain de difficulté de la map")}
+                  series={["aim", "speed", "strain"]
+                    .map((field, i) => ({
+                      name: [t("Aim"), t("Speed"), t("Strain")][i],
+                      color: ["#deb0e9", "#8dbbb3", "#e8c389"][i],
+                      points: analysis.strains
+                        .filter((s) => (s as any)[field] !== undefined)
+                        .map((s) => ({ x: s.time, y: (s as any)[field] })),
+                    }))
+                    .filter((s) => s.points.length)}
+                />
+                <div className="pp-scenarios">
+                  {analysis.pp.map((p) => (
+                    <div key={p.accuracy}>
+                      <span>{p.accuracy} %</span>
+                      <strong>
+                        {Math.round(p.pp)}
+                        <small> pp</small>
+                      </strong>
+                    </div>
+                  ))}
+                </div>
+                <p className="fine-print">
+                  {t("Scénarios sans miss calculés pour")} {analysis.client} · {analysis.engine}
+                  {t(". Ce sont des estimations locales.")}
+                </p>
+              </>
+            )}
+          </div>
+          <div className="drawer-section map-metadata">
+            <h3>{t("Métadonnées")}</h3>
+            <dl>
+              <dt>{t("Source du morceau")}</dt>
+              <dd>{m.source || "—"}</dd>
+              <dt>{t("Tags de la map")}</dt>
+              <dd>{m.tags || "—"}</dd>
+            </dl>
+          </div>
+          <div className="drawer-section">
+            <h3>
+              {t("Tentatives observées")}{" "}
+              <span className="muted">({detail.data?.plays.length || 0})</span>
+            </h3>
+            {detail.data?.plays.length ? (
+              detail.data.plays.map((p) => (
+                <div className="mini-play" key={p.id}>
+                  <span>{t(outcomes[p.outcome])}</span>
+                  <strong>{p.accuracy.toFixed(2)} %</strong>
+                  <span>
+                    {p.misses} {t("misses")}
+                  </span>
+                  <span>{p.mods}</span>
+                </div>
+              ))
+            ) : (
+              <p className="muted">
+                {t("Aucune tentative enregistrée pour cette version de la map.")}
+              </p>
+            )}
+          </div>
+          <div className="checksum">
+            <Database size={12} />
+            {m.checksum}
+          </div>
+        </div>
+      </aside>
+    </dialog>
+  );
 }

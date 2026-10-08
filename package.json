@@ -18,6 +18,10 @@
     "test": "node --import tsx --test test/settings.test.ts test/lazer-files.test.ts test/catalog.test.ts",
     "test:realm": "node --import tsx --test test/realm.integration.ts",
     "check:runtime": "node bin/check-runtime.mjs",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\" \"server/**/*.ts\" \"shared/**/*.ts\" \"scripts/**/*.mjs\" \"bin/**/*.mjs\" \"vite.config.ts\" eslint.config.js",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,css,json}\" \"server/**/*.ts\" \"shared/**/*.ts\" \"scripts/**/*.mjs\" \"bin/**/*.mjs\" \"vite.config.ts\" eslint.config.js",
     "desktop:prepare": "npm run build && node scripts/prepare-desktop.mjs",
     "desktop:dev": "tauri dev",
     "desktop:build": "tauri build",
@@ -47,6 +51,7 @@
     "esbuild": "^0.28.1"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@tauri-apps/cli": "^2.12.1",
     "@types/better-sqlite3": "^7.6.0",
     "@types/node": "^22.0.0",
@@ -55,9 +60,16 @@
     "@types/ws": "^8.5.0",
     "@vitejs/plugin-react": "^5.0.0",
     "concurrently": "^9.0.0",
+    "eslint": "^10.12.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.7",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.9",
     "tsup": "^8.0.0",
     "tsx": "^4.0.0",
     "typescript": "^5.9.0",
+    "typescript-eslint": "^8.71.1",
     "vite": "^7.0.0"
   }
 }
