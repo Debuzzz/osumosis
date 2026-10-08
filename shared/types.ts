@@ -11,7 +11,7 @@ export interface Beatmap {
   ar: number; od: number; cs: number; hp: number; objects: number;
   local: boolean; hasBackground: boolean; cover: string | null;
   played: boolean; lastPlayed: string | null; playCount: number;
-  collections: string[]; tags: string; pp?: number; reason?: string;
+  collections: string[]; tags: string; source?: string; pp?: number; reason?: string;
 }
 export interface SearchResult { maps: Beatmap[]; total: number; page: number; pages: number; groups?: Beatmap[][]; totalSets?: number }
 export interface Collection { id: number; name: string; total: number; installed: number }
@@ -37,6 +37,7 @@ export interface LiveState {
   capture?: CaptureStatus;
   history?: { time: number; pp: number; fcPp: number; accuracy: number }[];
   ppScenarios?: { accuracy: number; pp: number }[];
+  events?: PlayEvent[];
 }
 export interface CaptureStatus {
   mode: 'play' | 'replay' | 'unknown' | 'idle'; active: boolean; partial: boolean;
@@ -44,13 +45,15 @@ export interface CaptureStatus {
   statusConnected: boolean; reason: string;
 }
 export interface TosuDiagnostic { time: string; level: 'info' | 'warn' | 'error'; event: string; message: string }
-export interface PlayEvent { time: number; kind: string; count: number; accuracy: number; combo: number; pp: number; intervalStart: number; confidence: 'observed-interval' }
+export interface PlayEvent { time: number; kind: string; count: number; accuracy: number; combo: number; pp: number; fcPp?: number; intervalStart: number; confidence: 'observed-interval' }
+export interface PlaySnapshot { map: NonNullable<LiveState['map']>; play: NonNullable<LiveState['play']>; ppScenarios?: LiveState['ppScenarios'] }
 export interface Play {
   id: number; checksum: string; title: string; artist: string; version: string;
   startedAt: string; endedAt: string; outcome: string; mods: string; client: string;
   accuracy: number; combo: number; misses: number; sliderBreaks: number; pp: number;
   ur: number; duration: number; events: PlayEvent[];
   partial?: boolean; sourceConfirmed?: boolean;
+  snapshot?: PlaySnapshot;
 }
 export interface Analysis {
   checksum: string; mods: string; client: OsuClient; engine: string; stars: number; maxCombo: number;

@@ -55,7 +55,7 @@ export class Tosu extends EventEmitter {
     };
   }
   private publish() {
-    this.live = { ...this.live, capture: this.capture, history: [...this.history] };
+    this.live = { ...this.live, capture: this.capture, history: [...this.history], events: this.attempt ? this.attempt.events.filter(event => event.kind !== 'sample').slice(-300) : this.live.events || [] };
     this.emit('live', this.live);
   }
   connect(url: string) {
@@ -173,16 +173,22 @@ export class Tosu extends EventEmitter {
       if (n(play.score) > a.lastScore || judgmentCount(play.hits) > a.lastJudgments) a.observedGameplay = true;
       a.lastScore = n(play.score); a.lastJudgments = judgmentCount(play.hits);
       if (mode === 'play') a.sourceConfirmed = true;
-      const event = (kind: string, count: number) => { if (a.events.length < 12000) a.events.push({ time, kind, count, accuracy: play.accuracy, combo: play.combo, pp: play.pp, intervalStart: a.lastTime, confidence: 'observed-interval' }); };
+      const event = (kind: string, count: number) => { if (a.events.length < 12000) a.events.push({ time, kind, count, accuracy: play.accuracy, combo: play.combo, pp: play.pp, fcPp: play.fcPp, intervalStart: a.lastTime, confidence: 'observed-interval' }); };
       if (play.misses > a.misses) event('miss', play.misses - a.misses);
       if (play.sliderBreaks > a.sliderBreaks) event('sliderbreak', play.sliderBreaks - a.sliderBreaks);
       if (time - a.lastSample >= 1000 && !next.paused) { event('sample', 0); a.lastSample = time; }
-      Object.assign(a, { accuracy: play.accuracy, combo: Math.max(a.combo, play.maxCombo, play.combo), misses: play.misses, sliderBreaks: play.sliderBreaks, pp: play.pp, ur: play.ur, duration: Math.max(a.duration, Math.round(time)), lastTime: time });
+      Object.assign(a, { accuracy: play.accuracy, combo: Math.max(a.combo, play.maxCombo, play.combo), misses: play.misses, sliderBreaks: play.sliderBreaks, pp: play.pp, ur: play.ur, duration: Math.max(a.duration, Math.round(time)), lastTime: time, snapshot: { map: { ...next.map! }, play: { ...play, hits: { ...play.hits } }, ppScenarios: next.ppScenarios?.length ? next.ppScenarios : a.snapshot?.ppScenarios } });
       if (p.failed === true) { void this.finish('failed'); this.suppress = true; }
     }
     if (this.attempt && !playing) {
       if (completed) {
-        if (resultReady) Object.assign(this.attempt, { accuracy: numberOr(result.accuracy, this.attempt.accuracy), combo: Math.max(n(result.maxCombo), this.attempt.combo), misses: numberOr(result.hits?.['0'], this.attempt.misses), pp: numberOr(result.pp?.current, this.attempt.pp), mods: text(result.mods?.name) || this.attempt.mods });
+        if (resultReady) {
+          const a = this.attempt, accuracy = numberOr(result.accuracy, a.accuracy), pp = numberOr(result.pp?.current, a.pp);
+          const misses = numberOr(result.hits?.['0'], a.misses), duration = Math.max(a.duration, Math.round(next.map?.duration || 0));
+          if (misses > a.misses && a.events.length < 12000) a.events.push({ time: duration, kind: 'miss', count: misses - a.misses, accuracy, combo: n(result.maxCombo), pp, fcPp: next.play!.fcPp, intervalStart: a.lastTime, confidence: 'observed-interval' });
+          Object.assign(a, { accuracy, combo: Math.max(n(result.maxCombo), a.combo), misses, pp, duration, mods: text(result.mods?.name) || a.mods,
+            snapshot: { map: { ...next.map! }, play: { ...next.play!, fcPp: numberOr(result.pp?.fc, a.snapshot?.play.fcPp || 0), rank: text(result.rank) || a.snapshot?.play.rank, hits: { ...next.play!.hits } }, ppScenarios: next.ppScenarios?.length ? next.ppScenarios : a.snapshot?.ppScenarios } });
+        }
         // The result packet may arrive after the first state transition. Keep collecting it briefly.
         if (!this.resultTimer) this.resultTimer = setTimeout(() => { this.resultTimer = undefined; void this.finish('completed'); this.publish(); }, 800);
       } else void this.finish(this.resultTimer ? 'completed' : 'abandoned');
@@ -195,6 +201,8 @@ export class Tosu extends EventEmitter {
       }
     }
     if (state !== this.previousState || mode !== this.lastMode) this.log('info', 'state', `État ${state} · ${mode}.`);
+    const resetEvents = checksum !== this.previousChecksum || retry || (playing && this.previousState !== state);
+    next.events = this.attempt ? this.attempt.events.filter(event => event.kind !== 'sample').slice(-300) : resetEvents ? [] : this.live.events || [];
     this.lastMode = mode; this.live = next; this.previousChecksum = checksum; this.previousTime = time; this.previousState = state;
     this.publish();
   }
@@ -203,6 +211,13 @@ export class Tosu extends EventEmitter {
     this.clearResultTimer();
     const a = this.attempt; if (!a) return Promise.resolve(); this.attempt = null;
     if (a.duration <= 0 || outcome !== 'completed' && !a.observedGameplay) { this.log('info', 'capture-empty', 'Capture sans activité de jeu observée ; aucune tentative ajoutée.'); return Promise.resolve(); }
+    // Preserve the exact counters and final telemetry without changing earlier captures.
+    if (a.snapshot) {
+      a.snapshot.map.time = a.duration;
+      Object.assign(a.snapshot.play, { accuracy: a.accuracy, maxCombo: a.combo, misses: a.misses, sliderBreaks: a.sliderBreaks, pp: a.pp, ur: a.ur, mods: a.mods });
+    }
+    if (a.events.length < 12000) a.events.push({ time: a.duration, kind: 'sample', count: 0, accuracy: a.accuracy, combo: a.combo, pp: a.pp, fcPp: a.snapshot?.play.fcPp, intervalStart: a.lastTime, confidence: 'observed-interval' });
+    this.live.events = a.events.filter(event => event.kind !== 'sample').slice(-300);
     const { lastTime, lastSample, lastScore, lastJudgments, observedGameplay, ...play } = a;
     const saving = (async () => {
       try {

@@ -32,6 +32,9 @@
 
 - [x] Corriger la détection partie/replay (statut tosu dédié), finaliser les résultats et exposer un diagnostic de capture avec journal local.
 - [x] En direct : fond local, compteurs compacts, PP observés/FC et scénarios transmis par tosu.
+- [x] Vue commune direct/historique, modes automatique et manuels, widgets partagés avec les tentatives sauvegardées.
+- [x] Snapshot des scores et statistiques pour les nouvelles captures ; anciennes données affichées sans champs inventés.
+- [x] Chronologie et erreurs horizontalement, regroupement des erreurs dans la même seconde.
 
 - [ ] Flux tosu précis, erreurs de timing et touches ; normalisation par version/capacités.
 - [ ] Séries de vie, UR et timing compressées ; pauses et trous de connexion explicites.
@@ -53,6 +56,7 @@
 - [ ] Tags, notes, sauvegarde et restauration, exports CSV/JSON.
 - [ ] Parseur commun de recherche vers SQL et API : AST, unités, dates et aliases documentés.
 - [ ] Filtres PP, accuracy, misses, sliderbreaks, replay et caractéristiques.
+- [x] Filtres de métadonnées visibles (tags, source, mapper, version) et recherche dans les recommandations.
 - [x] Chargement au scroll par lots de 20 sets complets, avec filtres et tri locaux.
 - [ ] Virtualisation pour les listes importantes.
 - [ ] Provenance/fraîcheur des champs et résolution explicite des conflits local/API.
@@ -86,8 +90,19 @@
 - [ ] Audit visuel et clavier sur les WebViews réelles, contrastes et libellés longs.
 - [ ] Traduction structurée des erreurs métier du backend et prise en charge RTL.
 - [ ] Fusion bibliothèque/recommandations, filtres de mods et farm fondé sur les gains de PP.
-- [ ] Widgets personnalisables pour En direct et regroupement des erreurs rapprochées dans les analyses.
+- [ ] Widgets personnalisables pour le direct et les tentatives.
 - [ ] Éditeur de thème CSS dans les Réglages, aperçu et restauration du thème par défaut.
+
+## IA locale optionnelle, après le moteur de recommandations
+
+- [ ] Compléter d’abord le profil, les tops, les scénarios avec mods et le gain pondéré de PP calculé par le moteur.
+- [ ] Normaliser les métadonnées (tags, source, mapper, difficulté) et les caractéristiques dérivées des objets, avec provenance et confiance.
+- [ ] Index de similarité local avec embeddings précalculés et cache par checksum/version de modèle ; mises à jour incrémentales.
+- [ ] Adaptateur optionnel pour un modèle local via llama.cpp ou Ollama, sans chargement obligatoire pendant le jeu.
+- [ ] Transformer une demande en langage naturel en filtres structurés validés par le parseur, puis expliquer les candidats sélectionnés.
+- [ ] Modèle de raisonnement optionnel pour les explications complexes ; budget CPU/GPU/RAM configurable et fonctionnement sans IA conservé.
+
+Le modèle utilise le catalogue et les analyses connues. Il ne crée pas d’appels osu! implicites, ne calcule pas les PP à la place de rosu et ne traite pas un tag « farm » comme preuve de gain. Aucun modèle ni runtime IA n’est ajouté à cette livraison.
 
 ## Validation à réaliser quand demandée
 

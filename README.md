@@ -71,11 +71,17 @@ Le profil public est conservé en cache. La liaison utilisateur et la recherche 
 
 ## Capture des plays et diagnostic tosu
 
+**Tes plays** regroupe le direct et l’historique. Le mode **Automatique** montre la partie, la pause ou le replay courant et reste sur le résultat jusqu’au retour au menu, puis retrouve l’historique et sélectionne la nouvelle tentative sauvegardée. Ce suivi agit dans cette vue : il ne change pas de page pendant que l’on consulte la bibliothèque ou les Réglages. **Historique** et **En direct** permettent de choisir manuellement l’affichage, même pendant une partie.
+
+Une tentative sélectionnée reprend les mêmes widgets de score que le direct. La chronologie (accuracy ou PP) et les erreurs sont côte à côte sur une grande fenêtre ; la map et le score se trouvent dessous. Les erreurs d’une même seconde sont regroupées, avec une seule ligne et un seul repère, en conservant le nombre de misses et de sliderbreaks. Sur une petite fenêtre, les panneaux se replacent en une colonne.
+
+Les nouvelles captures conservent les compteurs, le rang, le score total, les statistiques de map et les scénarios PP disponibles auprès de tosu. Les anciennes restent lisibles, sans reconstruire les champs qui n’avaient pas été enregistrés : ils affichent `—`. Il s’agit de télémétrie sauvegardée ; le lecteur de frames `.osr` reste à réaliser. Les replays reconnus restent visibles en direct sans créer de tentative ; leurs événements d’erreur ne sont pas encore capturés par ce flux.
+
 Les parties observées sont sauvegardées à leur fin (résultat, fail, retry, abandon ou interruption). Le service attend au moins 350 ms et des valeurs cohérentes au départ, car tosu peut encore publier le temps de prévisualisation et les compteurs de la partie précédente après être passé en état play. Un retour du temps sans activité de jeu observée ne crée pas de retry. Le service attend ensuite brièvement les dernières valeurs de l’écran de résultat. Une capture commencée au milieu de la map est marquée partielle ; les premières misses déjà présentes ne sont pas inventées comme nouveaux événements.
 
 `settings.replayUIVisible` est une préférence d’interface, pas un indicateur de lecture replay. osu!mosis ouvre en plus le flux `/tokens` de la même instance tosu pour lire son statut StreamCompanion : `2` = partie, `8` = lecture replay. Si ce flux manque, l’interface et les captures portent la mention « mode non confirmé ». Les replays reconnus restent visibles dans En direct, y compris les valeurs de leur écran de résultat, et ne créent pas de tentative jouée. L’import de scores historiques/replays reste une fonctionnalité distincte à réaliser.
 
-Le panneau **Diagnostic de capture tosu**, présent dans En direct, Tes plays et Réglages, affiche les messages reçus, les sauvegardes, les transitions et les erreurs. Les événements sont également écrits dans le terminal et dans `.data/tosu.log`, avec rotation vers `.data/tosu.log.1` à 512 Kio. Le journal ne contient pas les payloads complets ni les réglages OAuth. Le nombre de sauvegardes dans le diagnostic couvre le démarrage actuel ; le total historique est celui de Tes plays.
+Le panneau **Diagnostic de capture tosu**, présent dans Tes plays et Réglages, affiche les messages reçus, les sauvegardes, les transitions et les erreurs. Les événements sont également écrits dans le terminal et dans `.data/tosu.log`, avec rotation vers `.data/tosu.log.1` à 512 Kio. Le journal ne contient pas les payloads complets ni les réglages OAuth. Le nombre de sauvegardes dans le diagnostic couvre le démarrage actuel ; le total historique est celui de Tes plays.
 
 Pour fournir un instantané de télémétrie, ouvrir `http://127.0.0.1:24050/json/v2` dans un navigateur, puis actualiser pendant une partie et sur le résultat. Retirer les noms et chemins personnels avant de partager le JSON. Le journal peut aussi se lire dans l’Invite de commandes :
 
@@ -132,6 +138,7 @@ stars>=5 stars<6.5 bpm>180 length<180
 creator="Sotarks" status=r,l
 collection:"DT farm" played=false
 artist="Camellia" local=true
+tags="stream" source="Touhou" creator="Sotarks"
 ```
 
 Les mots libres utilisent l’index plein texte. Les mots successifs et contraintes sont combinés avec AND. Les champs texte sont insensibles à la casse ASCII ; la recherche libre retire aussi les accents.
@@ -139,6 +146,8 @@ Les mots libres utilisent l’index plein texte. Les mots successifs et contrain
 Champs numériques : `stars`, `difficulty`, `bpm`, `length` (secondes), `ar`, `od`, `cs`, `hp`, `objects`, `plays`, `mode`, `id`.
 
 Champs texte : `artist`, `title`, `creator`, `mapper`, `version`, `tag`, `tags`, `source`.
+
+Les filtres avancés exposent les tags, la source du morceau, le mapper et le nom de difficulté. Leurs valeurs sont ajoutées à la barre de recherche ; elles sont aussi disponibles dans les recommandations. Tags et source sont affichés dans la fiche de map. Ils viennent du fichier `.osu` ou du cache des découvertes, sans nouvel appel pour filtrer. `tags="stream jump"` cherche cette phrase ; utiliser `tag=stream tag=jump` pour exiger les deux termes séparément. Ces métadonnées ne garantissent pas les patterns réels ni un potentiel de farm.
 
 Autres : `status`, `collection`, `local`, `played`. Les valeurs inconnues de difficulté ne sont pas assimilées à zéro. Les filtres de PP, UR et replays ne sont pas encore disponibles ; ils produisent une erreur explicite plutôt qu’un résultat incorrect.
 

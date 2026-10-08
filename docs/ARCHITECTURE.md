@@ -24,6 +24,16 @@
 
 `assets.ts` gère les miniatures depuis `assets.ppy.sh`, dans une file séparée espacée de 500 ms. Les réponses sont bornées à 2 Mio et le cache reproductible à 256 Mio. Le mode catalogue autorise seulement les lectures du cache ; la découverte et l’ouverture d’une fiche peuvent le remplir.
 
+## Vue commune des plays et snapshots
+
+`Plays.tsx` regroupe direct et historique. Le mode automatique suit l’état tosu (partie, pause, replay, résultat), puis revient à l’historique au menu. Le changement reste dans cette page ; il n’impose pas une navigation globale. Une sauvegarde reçue après le retour au menu déclenche la sélection de la tentative récente. Les modes manuels permettent de consulter un play pendant que le jeu continue.
+
+`PlayTimeline.tsx` affiche le graphe et les erreurs côte à côte, avec un repli en une colonne. Il regroupe les événements par seconde : misses et sliderbreaks restent comptés séparément, mais partagent une ligne et un marqueur. La précision de télémétrie n’est pas transformée en jugement exact par objet. `Performance.tsx` partage les widgets de map, score, accuracy, combo, jugements, UR et scénarios entre le direct et les captures.
+
+`tosu.ts` ajoute un snapshot de map/score/scénarios aux nouvelles tentatives, conserve les PP FC dans les événements et ajoute le dernier point de télémétrie. Les différences de misses révélées par le score final deviennent des événements observés au terme de la map. Ce snapshot est écrit dans le JSON `map_info` existant ; aucune migration destructive de SQLite n’est nécessaire. Une tentative ancienne n’a pas de snapshot : le frontend conserve ses valeurs connues et laisse les nouveaux champs absents. Les médias historiques viennent du catalogue local ou des couvertures déjà en cache ; ils ne consultent pas le fond tosu d’une autre partie. Les événements live sont bornés aux 300 derniers, l’historique PP aux 1 800 points, les événements stockés à 12 000. Les erreurs des replays reconnus ne sont pas suivies par ce journal de tentatives.
+
+Les filtres `tags`, `source`, `creator/mapper` et `version` sont exposés par `MetadataFilters.tsx` et ajoutés à la requête existante. `shared/search-query.ts` partage le découpage des valeurs entre UI, SQL et préparation de la découverte, y compris les guillemets échappés. SQLite FTS indexe déjà tags/source ; aucune IA ni réindexation dédiée n’est requise pour rechercher ces métadonnées. La recommandation reçoit la même requête en complément de sa cible initiale ; son heuristique de farm reste à enrichir.
+
 ## Identité et disponibilité
 
 Le checksum du fichier est la clé de révision. Les IDs de difficulté et set sont des attributs : les maps non soumises n’en ont pas nécessairement. Le même ID peut avoir plusieurs checksums.
