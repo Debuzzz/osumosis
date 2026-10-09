@@ -30,6 +30,12 @@ npm run verify       # l’ensemble des contrôles du push et de la CI
 
 Les tests travaillent dans des dossiers temporaires et n’utilisent pas la bibliothèque osu! du PC. La télémétrie de test utilise un serveur WebSocket local créé pour le test. Realm, SQLite et rosu nécessitent leurs modules natifs, installés par npm.
 
+### Fins de ligne sous Windows
+
+Git et Prettier utilisent LF pour les fichiers texte du dépôt. `.gitattributes` impose LF même avec `core.autocrlf=true`, et Prettier conserve ce format. Une ancienne copie Windows peut encore contenir CRLF ; après récupération du correctif, lancer `npm run format`, puis `npm run check`. Cela met à jour les fichiers déjà présents, que Git ne réécrit pas tous lors d’un pull.
+
+Si Prettier signale presque tous les fichiers alors qu’ESLint passe, consulter `git ls-files --eol` : `w/crlf` indique les fins de ligne Windows dans la copie locale. Les avertissements de Prettier concernent le format ; son code de sortie 1 fait volontairement échouer le contrôle. Avant de relancer une release, vérifier `git status` et committer les changements voulus pour retrouver un dépôt propre.
+
 ## Ce qui bloque un commit ou un push
 
 Au commit, `lint-staged` formate les fichiers préparés avec Prettier puis exige un lint sans erreur ni avertissement. TypeScript, les dépendances et la cohérence des versions npm/Tauri sont ensuite vérifiés sur le dépôt. Les modifications de formatage sont incluses au commit par lint-staged.

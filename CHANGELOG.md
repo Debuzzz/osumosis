@@ -32,6 +32,8 @@ Les changements sont regroupés par version selon [Keep a Changelog](https://kee
 
 ### Fixed
 
+- Fins de ligne LF imposées par Git et Prettier pour éviter les échecs massifs du contrôle de formatage après un checkout Windows.
+
 - Version affichée dans l’interface issue de package.json ; version desktop alignée sur la version npm.
 
 - Lecture lazer avec le nom persisté `File` du modèle Realm.
