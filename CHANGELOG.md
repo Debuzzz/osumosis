@@ -6,6 +6,8 @@ Les changements sont regroupés par version selon [Keep a Changelog](https://kee
 
 ### Added
 
+- Commande de release interactive patch/minor/major, synchronisation des versions npm/Tauri, notes datées et contrôle des versions avant commit/push et build desktop.
+
 - Hooks Git de commit/push et CI de qualité Windows/Linux, avec lint strict, formatage, types, architecture, tests et build.
 
 - Vue commune Tes plays/direct, basculement automatique et sélection manuelle de l’historique.
@@ -29,6 +31,8 @@ Les changements sont regroupés par version selon [Keep a Changelog](https://kee
 - Navigation adaptée aux petites fenêtres, dialogues avec gestion native du focus et amélioration du clavier/mouvement réduit.
 
 ### Fixed
+
+- Version affichée dans l’interface issue de package.json ; version desktop alignée sur la version npm.
 
 - Lecture lazer avec le nom persisté `File` du modèle Realm.
 - Capture des plays : statut partie/replay dédié, récupération du résultat et synchronisation du départ évitant les retries fantômes.

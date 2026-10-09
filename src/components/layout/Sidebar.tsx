@@ -1,4 +1,5 @@
 import { Database, FolderHeart, Settings2, X } from "lucide-react";
+import { version } from "../../../package.json";
 import type { Collection, LiveState } from "../../../shared/types";
 import type { NavigationItem, Page } from "../../app/navigation";
 import { t } from "../../lib/i18n";
@@ -142,7 +143,7 @@ export function Sidebar({
           <span>{t("Réglages")}</span>
         </button>
         <button className="version release-trigger" onClick={() => onNotes()}>
-          osu!mosis <span>{t("v0.2.0 · Notes de version")}</span>
+          osu!mosis <span>{t("v{{version}} · Notes de version", { version })}</span>
         </button>
       </div>
     </aside>
