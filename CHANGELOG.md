@@ -4,6 +4,12 @@ Changes are grouped by version following [Keep a Changelog](https://keepachangel
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-10-09
+
+### Changed
+
+- Run code quality checks only for pull requests and commits added to them.
+
 ## [0.4.1] - 2026-10-09
 
 ### Changed
