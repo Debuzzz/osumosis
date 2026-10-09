@@ -1,6 +1,8 @@
 # Localization
 
-The frontend uses i18next/react-i18next. **English is the source, default and fallback language.** French is an optional translation. Settings saves the selected language under `osumosis.language` in browser/WebView local storage; an existing French preference is preserved. Missing, unsupported or inaccessible preferences use English.
+The frontend uses i18next/react-i18next. **English is the source, default and fallback language.** French is an optional translation. Settings saves the selected language under `osumosis.language` in browser/WebView local storage.
+
+*Missing, unsupported or inaccessible preferences use English by default*
 
 ## Source and resources
 
@@ -17,7 +19,7 @@ t("osu! account: {{name}}", { name });
 t("{{count}} seconds", { count });
 ```
 
-Keep interpolation names unchanged in every language. Plurals use i18next suffixes such as `_one` and `_other`: `{{count}} seconds_one` contains `{{count}} second` in English and `{{count}} seconde` in French. A missing translation falls back to English. Use separate English keys when the French wording depends on context, such as the **Installed maps** tab and an **Installed** badge.
+Keep interpolation names unchanged in every language. Plurals use i18next suffixes such as `_one` and `_other`: `{{count}} seconds_one` contains `{{count}} second` in English.
 
 Map titles, tags, collections, mods, player names and search syntax are user/game data and are not translated. Backend diagnostics are technical messages rather than a fully localized error-code API; some specific messages may still appear in their original language. Structured backend error localization and RTL support remain roadmap work.
 
