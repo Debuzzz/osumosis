@@ -4,6 +4,8 @@ Changes are grouped by version following [Keep a Changelog](https://keepachangel
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-10-09
+
 ### Changed
 
 - Branded README with a social preview banner, project badges and quick links.
