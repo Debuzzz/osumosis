@@ -22,12 +22,6 @@ For a suggestion, an uncertain design or a broad architecture change, [open an i
 
 For a bug report, include reproduction steps, the expected/actual behavior and relevant versions or redacted diagnostics. Keep OAuth secrets, tokens, private paths and complete personal telemetry out of public reports. Once the scope is clear, a focused PR is welcome.
 
-## Repository presentation
-
-The README banner also serves as the repository's social preview. Keep [assets/social-preview.png](../assets/social-preview.png) at **1280 × 640 pixels**, with readable text and safe margins for thumbnails.
-
-To apply it on GitHub, download the PNG, then open **Settings → General → Social preview → Edit → Upload an image** in the repository. Committing the file updates the README; the social preview requires this separate repository-settings upload. Access to repository settings is required.
-
 ## Find the right file
 
 - Views: `src/features/<feature>/`; shared visuals: `src/components/`.
@@ -53,7 +47,7 @@ npm run build        # production frontend and backend
 npm run verify       # all push and CI checks
 ```
 
-Tests use temporary directories instead of the computer's real osu! library. Telemetry tests create their own local WebSocket server. Realm, SQLite and rosu require the native modules installed by npm. A passing cloud build does not validate real Windows gameplay, WebViews or installers.
+Tests use temporary directories instead of the computer's real osu! library. Telemetry tests create their own local WebSocket server. Realm, SQLite and rosu require the native modules installed by npm. A passing cloud build does not validate real Windows gameplay, WebViews or installers but can be close to the real one.
 
 ### Windows line endings and paths
 
@@ -69,7 +63,7 @@ Before push, `npm run verify` checks the entire repository, runs tests and build
 
 After checking out changes, run `npm ci` to activate hooks. Review `git status` and commit intended changes before invoking a release command, which expects a clean checkout.
 
-## Prepare a version
+## Prepare a version (For those accepting the PR)
 
 Use one version per release, with the agreed bump completed before pushing a versioned PR. Multiple development commits can belong to one release. The push hook validates versions; interactive selection uses a separate command because Git passes ref updates through the hook's standard input and CI cannot answer a prompt.
 
@@ -77,6 +71,7 @@ Update `[Unreleased]` in `CHANGELOG.md`, commit the changes, then choose the wor
 
 ### Versioned PR
 
+example:
 ```sh
 npm version minor --no-git-tag-version
 git add package.json package-lock.json src-tauri/tauri.conf.json src-tauri/Cargo.toml src-tauri/Cargo.lock CHANGELOG.md
