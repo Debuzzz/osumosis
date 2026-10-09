@@ -1,6 +1,6 @@
 [package]
 name = "osumosis-desktop"
-version = "0.2.0"
+version = "0.3.0"
 description = "osu!mosis local companion"
 authors = ["Debuzzz"]
 edition = "2021"

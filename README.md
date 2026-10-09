@@ -28,6 +28,10 @@ npm run format:check  # vérifier le formatage
 npm run format        # formater les fichiers
 ```
 
+`npm ci` active les hooks Git : formatage/lint des fichiers préparés au commit, puis types et architecture ; `npm run verify` bloque le push si les contrôles, tests ou build échouent. La CI refait ces vérifications sous Windows et Linux. Voir [le guide de contribution](docs/CONTRIBUTING.md) et [l’architecture par fonctionnalités](docs/ARCHITECTURE.md).
+
+Pour préparer une release depuis un dépôt propre : `npm run release` demande `patch`, `minor` ou `major` ; `npm run release -- minor` passe le choix directement. Les contrôles sont lancés, les versions npm/Tauri et les notes sont synchronisées, puis npm crée un commit et un tag locaux. `git push origin HEAD --follow-tags` les publie et déclenche les builds desktop. Le [guide de contribution](docs/CONTRIBUTING.md#préparer-une-version) décrit les étapes et le fonctionnement avec une branche protégée.
+
 ## Prérequis et démarrage sous Windows
 
 - Node.js LTS **22.12 ou plus récent**, avec npm, installé normalement sur le PC (version x64 conseillée).

@@ -12,21 +12,31 @@
   },
   "scripts": {
     "dev": "concurrently -k -n server,web -c cyan,magenta \"tsx watch server/index.ts\" \"vite --host 127.0.0.1\"",
-    "build": "tsc --noEmit && vite build && tsup server/index.ts server/catalog-worker.ts server/analysis-worker.ts --format esm --platform node --target node22 --out-dir dist/server --external better-sqlite3 --external rosu-pp-js --external realm",
+    "build": "tsc --noEmit && vite build && tsup",
     "start": "node bin/osumosis.mjs",
     "index": "tsx server/cli.ts",
-    "test": "node --import tsx --test test/settings.test.ts test/lazer-files.test.ts test/catalog.test.ts",
+    "test": "node --import tsx --test test/*.test.ts",
     "test:realm": "node --import tsx --test test/realm.integration.ts",
     "check:runtime": "node bin/check-runtime.mjs",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
-    "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\" \"server/**/*.ts\" \"shared/**/*.ts\" \"scripts/**/*.mjs\" \"bin/**/*.mjs\" \"vite.config.ts\" eslint.config.js",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx,css,json}\" \"server/**/*.ts\" \"shared/**/*.ts\" \"scripts/**/*.mjs\" \"bin/**/*.mjs\" \"vite.config.ts\" eslint.config.js",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\" \"server/**/*.{ts,mjs}\" \"shared/**/*.ts\" \"test/**/*.ts\" \"scripts/**/*.mjs\" \"bin/**/*.mjs\" \"*.{json,html}\" \"*.config.{ts,js}\" \"*.md\" \"docs/*.md\" \".github/workflows/*.{yml,yaml}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,css,json}\" \"server/**/*.{ts,mjs}\" \"shared/**/*.ts\" \"test/**/*.ts\" \"scripts/**/*.mjs\" \"bin/**/*.mjs\" \"*.{json,html}\" \"*.config.{ts,js}\" \"*.md\" \"docs/*.md\" \".github/workflows/*.{yml,yaml}\"",
     "desktop:prepare": "npm run build && node scripts/prepare-desktop.mjs",
     "desktop:dev": "tauri dev",
     "desktop:build": "tauri build",
     "desktop:info": "tauri info",
-    "release:notes": "node scripts/release-notes.mjs"
+    "release:notes": "node scripts/release-notes.mjs",
+    "release": "node scripts/release.mjs",
+    "preversion": "npm run verify",
+    "version": "node scripts/version.mjs --sync --stage --release-notes",
+    "version:sync": "node scripts/version.mjs --sync",
+    "check:versions": "node scripts/version.mjs",
+    "prepare": "node scripts/install-hooks.mjs",
+    "typecheck": "tsc --noEmit",
+    "check:architecture": "node scripts/check-architecture.mjs",
+    "check": "npm run lint && npm run format:check && npm run typecheck && npm run check:architecture && npm run check:versions",
+    "verify": "npm run check && npm test && npm run test:realm && npm run build"
   },
   "dependencies": {
     "@fastify/static": "^10.1.5",
@@ -65,11 +75,20 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.7",
     "globals": "^17.13.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
     "prettier": "^3.9.9",
     "tsup": "^8.0.0",
     "tsx": "^4.0.0",
     "typescript": "^5.9.0",
     "typescript-eslint": "^8.71.1",
     "vite": "^7.0.0"
+  },
+  "lint-staged": {
+    "*.{js,mjs,cjs,ts,tsx}": [
+      "prettier --write",
+      "eslint --max-warnings 0"
+    ],
+    "*.{css,json,md,html,yml,yaml}": "prettier --write"
   }
 }

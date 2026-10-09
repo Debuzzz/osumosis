@@ -1,6 +1,6 @@
-import { createHash } from 'node:crypto';
-import { mkdir, writeFile } from 'node:fs/promises';
-import path from 'node:path';
+import { createHash } from "node:crypto";
+import { mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
 
 export const beatmap = `osu file format v14
 [General]
@@ -32,10 +32,11 @@ SliderTickRate: 1
 384,64,3000,2,0,B|128:256,2,280
 256,192,5500,1,0,0:0:0:0:
 `;
-export const md5 = (content: string | Buffer) => createHash('md5').update(content).digest('hex');
+export const md5 = (content: string | Buffer) => createHash("md5").update(content).digest("hex");
 export async function storeLazerFile(root: string, content: string) {
-  const hash = createHash('sha256').update(content).digest('hex');
+  const hash = createHash("sha256").update(content).digest("hex");
   const file = path.join(root, hash[0], hash.slice(0, 2), hash);
-  await mkdir(path.dirname(file), { recursive: true }); await writeFile(file, content);
+  await mkdir(path.dirname(file), { recursive: true });
+  await writeFile(file, content);
   return { hash, file };
 }

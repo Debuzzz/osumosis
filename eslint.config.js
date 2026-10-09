@@ -26,13 +26,24 @@ export default tseslint.config(
       "react-refresh/only-export-components": "warn",
       "no-undef": "off",
       "no-unused-vars": "off",
-      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_" }],
-      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        { argsIgnorePattern: "^_", ignoreRestSiblings: true },
+      ],
+      "@typescript-eslint/no-explicit-any": "error",
     },
+  },
+  {
+    files: ["**/*.{js,mjs,cjs,jsx}"],
+    rules: { "no-undef": "error" },
   },
   {
     files: ["test/**/*.{js,mjs,cjs,jsx,ts,tsx}"],
     rules: { "@typescript-eslint/no-unused-expressions": "off" },
+  },
+  {
+    files: ["src/**/*.{ts,tsx}", "server/**/*.ts"],
+    rules: { "max-lines": ["error", { max: 450, skipBlankLines: true, skipComments: true }] },
   },
   prettier,
 );

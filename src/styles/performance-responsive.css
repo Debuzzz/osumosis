@@ -1,0 +1,137 @@
+@media (max-width: 1100px) {
+  .live-score-strip {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .live-score-strip > div {
+    border-bottom: 1px solid var(--line);
+  }
+  .live-score-strip .live-accuracy {
+    grid-column: span 2;
+  }
+  .live-analysis-grid {
+    grid-template-columns: minmax(0, 1.3fr) minmax(220px, 1fr);
+  }
+  .live-stage-content {
+    padding: 25px;
+  }
+  .live-pp-focus {
+    flex-basis: 180px;
+  }
+  .live-map-stats {
+    gap: 12px;
+  }
+}
+
+@media (max-width: 760px) {
+  .live-stage-content {
+    align-items: flex-start;
+    padding: 23px 20px;
+    gap: 16px;
+  }
+  .live-track h2 {
+    font-size: 22px;
+  }
+  .live-pp-focus {
+    flex-basis: 125px;
+  }
+  .live-pp-focus strong {
+    font-size: 42px;
+  }
+  .live-pp-focus > div > span {
+    font-size: 18px;
+  }
+  .live-map-stats {
+    gap: 12px;
+  }
+  .live-map-stats > span {
+    font-size: 8px;
+  }
+  .live-stage-progress {
+    margin: 0 20px;
+  }
+  .live-stage-times {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  .live-score-strip > div {
+    padding: 16px 12px;
+  }
+  .live-score-strip strong {
+    font-size: 22px;
+  }
+  .live-analysis-grid {
+    grid-template-columns: 1fr;
+  }
+  .live-panel {
+    padding: 18px;
+  }
+  .diagnostic-events > div {
+    grid-template-columns: 55px minmax(0, 1fr);
+    gap: 8px;
+  }
+  .diagnostic-events > div > span {
+    grid-column: 1 / -1;
+  }
+  .live-secondary-stats {
+    padding-bottom: 16px;
+  }
+  .live-panel .chart svg {
+    max-height: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .live-stage-content {
+    flex-direction: column;
+  }
+  .live-pp-focus {
+    flex-basis: auto;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    text-align: left;
+    width: 100%;
+    flex-wrap: wrap;
+  }
+  .live-pp-focus > small {
+    display: none;
+  }
+  .live-pp-target {
+    margin-top: 0;
+    margin-left: auto;
+  }
+  .live-pp-focus strong {
+    font-size: 38px;
+  }
+  .live-pp-focus > div:not(.live-pp-target) {
+    justify-content: flex-start;
+  }
+  .live-score-strip {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .live-score-strip .live-accuracy {
+    grid-column: span 1;
+  }
+  .live-score-strip strong {
+    font-size: 20px;
+  }
+  .live-score-strip strong small {
+    font-size: 13px;
+  }
+  .live-score-strip > div > span {
+    font-size: 9px;
+  }
+  .live-score-strip > div {
+    padding: 14px 10px;
+  }
+  .live-score-strip > div:last-child {
+    grid-column: span 3;
+  }
+  .live-map-stats {
+    gap: 13px;
+  }
+  .live-scenarios {
+    justify-content: flex-start;
+    gap: 20px;
+  }
+}

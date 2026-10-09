@@ -93,6 +93,13 @@
 - [ ] Widgets personnalisables pour le direct et les tentatives.
 - [ ] Éditeur de thème CSS dans les Réglages, aperçu et restauration du thème par défaut.
 
+## Structure et qualité du code
+
+- [x] Monolithe modulaire : backend découpé par fonctionnalités, routes, services et repositories.
+- [x] App limité à la composition globale ; vues, composants, hooks, outils et styles séparés.
+- [x] Contrat RPC typé, contrôle des dépendances et limite de taille des fichiers applicatifs.
+- [x] Hooks de commit/push et CI Windows/Linux : lint sans avertissement, format, types, architecture, tests et build.
+
 ## IA locale optionnelle, après le moteur de recommandations
 
 - [ ] Compléter d’abord le profil, les tops, les scénarios avec mods et le gain pondéré de PP calculé par le moteur.

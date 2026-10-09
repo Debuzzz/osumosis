@@ -321,7 +321,7 @@
   "tosu connecté": "tosu connecté",
   "tosu doit tourner sur ce PC. L’application se reconnecte automatiquement. Le flux v2 fournit les valeurs ; le flux local /tokens confirme le mode partie/replay.": "tosu doit tourner sur ce PC. L’application se reconnecte automatiquement. Le flux v2 fournit les valeurs ; le flux local /tokens confirme le mode partie/replay.",
   "tosu hors ligne": "tosu hors ligne",
-  "v0.2.0 · Notes de version": "v0.2.0 · Notes de version",
+  "v{{version}} · Notes de version": "v{{version}} · Notes de version",
   "{{count}} secondes": "{{count}} secondes",
   "{{count}} secondes_one": "{{count}} seconde",
   "{{count}} secondes_other": "{{count}} secondes",

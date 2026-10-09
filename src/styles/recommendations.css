@@ -1,0 +1,197 @@
+.heading-icon {
+  color: #d0a8df;
+  opacity: 0.65;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 19px;
+}
+
+.section-title > svg {
+  color: #bb9bcd;
+}
+
+.section-title h2 {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.section-title .badge {
+  margin-left: auto;
+}
+
+.section-title .icon-button {
+  margin-left: auto;
+}
+
+.badge {
+  display: inline-flex;
+  font-size: 8px;
+  color: #b5a3c0;
+  border: 1px solid #44334f;
+  background: #302538;
+  border-radius: 5px;
+  padding: 5px 8px;
+  white-space: nowrap;
+}
+
+.recommend-panel,
+.settings-section,
+.play-analysis {
+  border: 1px solid #30303c;
+  background: #1b1d26;
+  padding: 24px;
+  border-radius: 11px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.form-grid label,
+.settings-section label {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  color: #bbb2c5;
+  font-size: 11px;
+}
+
+.form-grid label input,
+.form-grid label select {
+  width: 100%;
+  font-size: 12px;
+}
+
+.target-slider {
+  margin-top: 30px;
+}
+
+.target-slider > label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #a99eb5;
+}
+
+.target-slider strong {
+  color: var(--accent);
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.target-slider input {
+  width: 100%;
+  accent-color: var(--accent);
+  padding: 0;
+  margin: 20px 0 10px;
+}
+
+.target-slider > div {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: #77717f;
+}
+
+.recommend-bottom {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+  border-top: 1px solid #332e3e;
+  margin-top: 24px;
+  padding-top: 20px;
+}
+
+.recommend-bottom p {
+  font-size: 10px;
+  color: #8f839d;
+  max-width: 570px;
+  flex: 1;
+}
+
+.recommend-intro {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  margin-top: 32px;
+  padding: 0 5px;
+}
+
+.recommend-intro > div > span {
+  font-size: 11px;
+  color: #b79ac9;
+  border-bottom: 1px solid #42314e;
+  padding-bottom: 9px;
+  display: inline-block;
+  margin-bottom: 15px;
+}
+
+.recommend-intro h3 {
+  font-size: 13px;
+  color: #cfc4d9;
+}
+
+.recommend-intro p {
+  font-size: 11px;
+  color: #91869e;
+  margin-top: 8px;
+}
+
+.empty-panel {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  padding: 45px 25px;
+  gap: 17px;
+  border: 1px dashed #3b3445;
+  border-radius: 12px;
+  background: radial-gradient(ellipse at top, #2e243b33, transparent 70%);
+  margin-top: 20px;
+}
+
+.empty-panel.large {
+  min-height: 340px;
+}
+
+.empty-panel > svg {
+  color: #b997ce;
+}
+
+.empty-panel h2 {
+  color: #d3c5dc;
+  font-size: 20px;
+}
+
+.empty-panel p {
+  max-width: 440px;
+  font-size: 12px;
+  color: #988ba5;
+}
+
+.plays-list {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.play-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  text-align: left;
+  width: 100%;
+  border: 1px solid #2f2d3a;
+  border-radius: 10px;
+  padding: 15px;
+  background: #1a1b25;
+}

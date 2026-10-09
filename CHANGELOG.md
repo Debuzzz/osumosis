@@ -6,6 +6,10 @@ Les changements sont regroupés par version selon [Keep a Changelog](https://kee
 
 ### Added
 
+- Commande de release interactive patch/minor/major, synchronisation des versions npm/Tauri, notes datées et contrôle des versions avant commit/push et build desktop.
+
+- Hooks Git de commit/push et CI de qualité Windows/Linux, avec lint strict, formatage, types, architecture, tests et build.
+
 - Vue commune Tes plays/direct, basculement automatique et sélection manuelle de l’historique.
 - Widgets de score partagés avec les tentatives sauvegardées, snapshot des nouvelles captures et PP FC dans la chronologie.
 - Filtres visibles de tags, source du morceau, mapper et difficulté dans la bibliothèque et les recommandations.
@@ -18,12 +22,21 @@ Les changements sont regroupés par version selon [Keep a Changelog](https://kee
 
 ### Changed
 
+- Architecture organisée par fonctionnalités : routes/services/repositories backend, vues et composants frontend, App conservé comme composition globale.
+- Contrat RPC du catalogue typé, séparation transport/normalisation/capture tosu et styles répartis en fichiers.
+
 - Chronologie et erreurs côte à côte, score dessous ; regroupement des misses/sliderbreaks par seconde.
 
 - Les Réglages restent dans la navigation latérale ; l’avatar devient l’accès au compte osu!.
 - Navigation adaptée aux petites fenêtres, dialogues avec gestion native du focus et amélioration du clavier/mouvement réduit.
 
 ### Fixed
+
+- Résolution canonique de la racine lazer avant le contrôle des fichiers, avec tests adaptés aux chemins temporaires Windows et couverture des alias/jonctions.
+
+- Fins de ligne LF imposées par Git et Prettier pour éviter les échecs massifs du contrôle de formatage après un checkout Windows.
+
+- Version affichée dans l’interface issue de package.json ; version desktop alignée sur la version npm.
 
 - Lecture lazer avec le nom persisté `File` du modèle Realm.
 - Capture des plays : statut partie/replay dédié, récupération du résultat et synchronisation du départ évitant les retries fantômes.
