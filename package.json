@@ -1,6 +1,6 @@
 {
   "name": "osumosis",
-  "version": "0.3.0",
+  "version": "0.4.1",
   "private": true,
   "type": "module",
   "description": "osu!mosis — local osu! library, discovery and play analysis",
@@ -20,8 +20,8 @@
     "check:runtime": "node bin/check-runtime.mjs",
     "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
-    "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\" \"server/**/*.{ts,mjs}\" \"shared/**/*.ts\" \"test/**/*.ts\" \"scripts/**/*.mjs\" \"bin/**/*.mjs\" \"*.{json,html}\" \"*.config.{ts,js}\" \"*.md\" \"docs/*.md\" \".github/workflows/*.{yml,yaml}\"",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx,css,json}\" \"server/**/*.{ts,mjs}\" \"shared/**/*.ts\" \"test/**/*.ts\" \"scripts/**/*.mjs\" \"bin/**/*.mjs\" \"*.{json,html}\" \"*.config.{ts,js}\" \"*.md\" \"docs/*.md\" \".github/workflows/*.{yml,yaml}\"",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css,json}\" \"server/**/*.{ts,mjs}\" \"shared/**/*.ts\" \"test/**/*.ts\" \"scripts/**/*.mjs\" \"bin/**/*.mjs\" \"*.{json,html}\" \"*.config.{ts,js}\" \"*.md\" \"docs/*.md\" \".github/workflows/*.{yml,yaml}\" \".agents/skills/**/*.md\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,css,json}\" \"server/**/*.{ts,mjs}\" \"shared/**/*.ts\" \"test/**/*.ts\" \"scripts/**/*.mjs\" \"bin/**/*.mjs\" \"*.{json,html}\" \"*.config.{ts,js}\" \"*.md\" \"docs/*.md\" \".github/workflows/*.{yml,yaml}\" \".agents/skills/**/*.md\"",
     "desktop:prepare": "npm run build && node scripts/prepare-desktop.mjs",
     "desktop:dev": "tauri dev",
     "desktop:build": "tauri build",

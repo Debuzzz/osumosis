@@ -99,8 +99,8 @@ export function Library({
       await client.invalidateQueries({ queryKey: ["status"] });
       notify(
         data.cached
-          ? t("Recherche réutilisée depuis le cache.")
-          : t("{{p0}} difficultés ajoutées au catalogue. Aucune installation dans le jeu.", {
+          ? t("Search reused from cache.")
+          : t("{{p0}} difficulties added to the catalog. Nothing installed in the game.", {
               p0: data.imported,
             }),
       );
@@ -124,10 +124,10 @@ export function Library({
             <span /> {t("EXPLORE. PLAY. REPEAT.")}
           </div>
           <h1>
-            {t("La prochaine bonne map")}
+            {t("Your next good map")}
             <span>.</span>
           </h1>
-          <p>{t("Ta bibliothèque osu!, avec un peu plus de possibilités.")}</p>
+          <p>{t("Your osu! library, with a few more possibilities.")}</p>
         </div>
         <button
           className="secondary-button"
@@ -135,17 +135,17 @@ export function Library({
           disabled={busy || status?.index.running}
         >
           <RefreshCw size={15} className={status?.index.running ? "spin" : ""} />
-          {status?.index.running ? t("Indexation…") : t("Indexer la bibliothèque")}
+          {status?.index.running ? t("Indexing…") : t("Index library")}
         </button>
       </div>
       <div className="stat-strip">
         <Stat
-          label={t("DIFFICULTÉS INSTALLÉES")}
+          label={t("INSTALLED DIFFICULTIES")}
           value={(status?.installed || 0).toLocaleString(locale())}
           icon={Layers3}
         />
         <Stat
-          label={t("SETS LOCAUX")}
+          label={t("LOCAL SETS")}
           value={(status?.sets || 0).toLocaleString(locale())}
           icon={MapIcon}
         />
@@ -154,20 +154,14 @@ export function Library({
           value={String(status?.collections || 0)}
           icon={FolderHeart}
         />
-        <Stat
-          label={t("TENTATIVES OBSERVÉES")}
-          value={String(status?.plays || 0)}
-          icon={Activity}
-        />
+        <Stat label={t("OBSERVED ATTEMPTS")} value={String(status?.plays || 0)} icon={Activity} />
       </div>
       {status?.index.running && (
         <div className="index-progress">
           <LoaderCircle size={16} className="spin" />
           <span>
-            {status.index.phase === "collections"
-              ? t("Lecture des collections")
-              : t("Lecture des maps")}{" "}
-            · {status.index.processed.toLocaleString(locale())} {t("fichiers")}
+            {status.index.phase === "collections" ? t("Reading collections") : t("Reading maps")} ·{" "}
+            {status.index.processed.toLocaleString(locale())} {t("files")}
           </span>
           <div className="indeterminate" />
         </div>
@@ -193,32 +187,32 @@ export function Library({
       <div className="results-toolbar">
         <div>
           <span className="results-number">{total.toLocaleString(locale())}</span>{" "}
-          {t("difficultés")}{" "}
+          {t("difficulties")}{" "}
           <span className="muted">
             {collection
               ? `· ${collections.find((c) => String(c.id) === collection)?.name || t("Collection")}`
-              : t("· à explorer")}
+              : t("· to explore")}
           </span>
           {result.isFetching && <LoaderCircle className="spin" size={14} />}
         </div>
         <div className="sort-tools">
           <ArrowDownUp size={14} />
           <select
-            aria-label={t("Trier les maps")}
+            aria-label={t("Sort maps")}
             value={sort}
             onChange={(e) => setSort(e.target.value)}
           >
-            <option value="title">{t("Titre")}</option>
-            <option value="artist">{t("Artiste")}</option>
-            <option value="difficulty">{t("Difficulté")}</option>
-            <option value="length">{t("Durée")}</option>
+            <option value="title">{t("Title")}</option>
+            <option value="artist">{t("Artist")}</option>
+            <option value="difficulty">{t("Difficulty")}</option>
+            <option value="length">{t("Length")}</option>
             <option value="bpm">BPM</option>
-            <option value="recent">{t("Ajout récent")}</option>
-            <option value="played">{t("Dernier play")}</option>
+            <option value="recent">{t("Recently added")}</option>
+            <option value="played">{t("Last played")}</option>
           </select>
           <div className="view-toggle">
             <button
-              title={t("Grille")}
+              title={t("Grid")}
               aria-pressed={view === "grid"}
               className={view === "grid" ? "active" : ""}
               onClick={() => setView("grid")}
@@ -226,7 +220,7 @@ export function Library({
               <Grid2X2 size={16} />
             </button>
             <button
-              title={t("Liste")}
+              title={t("List")}
               aria-pressed={view === "list"}
               className={view === "list" ? "active" : ""}
               onClick={() => setView("list")}
@@ -239,13 +233,13 @@ export function Library({
       {result.isPending ? (
         <div className="catalog-loading" role="status">
           <LoaderCircle className="spin" size={18} />
-          {t("Chargement des maps…")}
+          {t("Loading maps…")}
         </div>
       ) : result.isError && !groups.length ? (
         <div className="error-box">
           {result.error.message}
           <button className="secondary-button small" onClick={() => void result.refetch()}>
-            {t("Réessayer")}
+            {t("Try again")}
           </button>
         </div>
       ) : groups.length ? (
@@ -267,43 +261,39 @@ export function Library({
             <span />
             <MapIcon size={33} />
           </div>
-          <div className="eyebrow">{t("UN CATALOGUE QUI GRANDIT AVEC TOI")}</div>
+          <div className="eyebrow">{t("A CATALOG THAT GROWS WITH YOU")}</div>
           <h2>
             {query || collection || category !== "any" || mode !== "any"
-              ? t("Aucune map avec ces filtres.")
+              ? t("No maps match these filters.")
               : source === "local"
-                ? t("Ta bibliothèque commence ici.")
-                : t("Encore aucune map dans cette vue.")}
+                ? t("Your library starts here.")
+                : t("No maps in this view yet.")}
           </h2>
           <p>
             {source === "local"
               ? t(
-                  "Choisis ton profil stable ou lazer dans les Réglages, puis indexe tes maps, images et collections sur ce PC.",
+                  "Choose your stable or lazer profile in Settings, then index maps, images and collections on this computer.",
                 )
-              : t(
-                  "Les maps découvertes en ligne seront conservées ici, prêtes pour une prochaine recherche.",
-                )}
+              : t("Maps discovered online will be saved here for your next search.")}
           </p>
           <button className="primary-button" onClick={onSettings}>
             <FolderOpen size={17} />
-            {t("Configurer osu!")}
+            {t("Configure osu!")}
             <ArrowRight size={15} />
           </button>
-          <span className="empty-footnote">
-            {t("Tes fichiers de jeu sont lus, jamais modifiés.")}
-          </span>
+          <span className="empty-footnote">{t("Game files are read, never modified.")}</span>
         </div>
       )}
       {groups.length > 0 && (
         <div ref={sentinel} className="catalog-load-more" aria-live="polite">
           <span>
             {groups.length.toLocaleString(locale())} / {totalSets.toLocaleString(locale())}{" "}
-            {t("sets affichés")}
+            {t("sets shown")}
           </span>
           {result.isFetchingNextPage ? (
             <span role="status">
               <LoaderCircle className="spin" size={16} />
-              {t("Chargement de 20 sets supplémentaires…")}
+              {t("Loading 20 more sets…")}
             </span>
           ) : result.isFetchNextPageError ? (
             <>
@@ -312,7 +302,7 @@ export function Library({
                 className="secondary-button"
                 onClick={() => void result.fetchNextPage({ cancelRefetch: false })}
               >
-                {t("Réessayer")}
+                {t("Try again")}
               </button>
             </>
           ) : result.hasNextPage ? (
@@ -321,10 +311,10 @@ export function Library({
               disabled={result.isFetching}
               onClick={() => void result.fetchNextPage({ cancelRefetch: false })}
             >
-              {t("Charger 20 sets supplémentaires")}
+              {t("Load 20 more sets")}
             </button>
           ) : (
-            <span>{t("Fin des résultats")}</span>
+            <span>{t("End of results")}</span>
           )}
         </div>
       )}

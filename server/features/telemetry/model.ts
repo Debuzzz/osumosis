@@ -1,7 +1,7 @@
 import type { LiveState, Play } from "../../../shared/types";
 export const blank: LiveState = {
   connected: false,
-  state: "Hors ligne",
+  state: "Offline",
   client: "",
   paused: false,
   map: null,

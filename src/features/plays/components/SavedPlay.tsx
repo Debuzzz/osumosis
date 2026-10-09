@@ -36,18 +36,18 @@ export function SavedPlay({ play, onClose }: { play: Play; onClose: () => void }
     [play, snapshot],
   );
   return (
-    <section className="saved-play" aria-label={t("Tentative enregistrée")}>
+    <section className="saved-play" aria-label={t("Recorded attempt")}>
       <div className="performance-heading">
         <div>
           <h2>{play.title}</h2>
           <p className="muted">
             {new Date(play.startedAt).toLocaleString(locale())} ·{" "}
             {t(outcomes[play.outcome] || play.outcome)}
-            {play.partial ? t(" · Capture partielle") : ""}
-            {play.sourceConfirmed === false ? t(" · Mode non confirmé") : ""}
+            {play.partial ? t(" · Partial capture") : ""}
+            {play.sourceConfirmed === false ? t(" · Unconfirmed mode") : ""}
           </p>
         </div>
-        <button className="icon-button" aria-label={t("Fermer l’analyse")} onClick={onClose}>
+        <button className="icon-button" aria-label={t("Close analysis")} onClick={onClose}>
           <X size={20} />
         </button>
       </div>
@@ -62,13 +62,11 @@ export function SavedPlay({ play, onClose }: { play: Play; onClose: () => void }
       {!snapshot && (
         <p className="notice">
           {t(
-            "Ancienne capture : les jugements, le rang, le score total et les statistiques de map n’ont pas été conservés. Les champs absents restent vides.",
+            "Older capture: judgments, grade, total score and map statistics were not stored. Missing fields remain blank.",
           )}
         </p>
       )}
-      <p className="fine-print">
-        {t("Affichage de la télémétrie sauvegardée, sans lecture des frames du replay.")}
-      </p>
+      <p className="fine-print">{t("Showing saved telemetry, without replay frame playback.")}</p>
     </section>
   );
 }

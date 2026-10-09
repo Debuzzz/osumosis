@@ -14,8 +14,8 @@ export function AccountSettings({
     <section className="settings-section">
       <div className="section-title">
         <Sparkles size={19} />
-        <h2>{t("Compte osu! et découverte")}</h2>
-        <span className="badge">{t("5 appels / minute")}</span>
+        <h2>{t("osu! account and discovery")}</h2>
+        <span className="badge">{t("5 requests / minute")}</span>
       </div>
       <div className="form-grid">
         <label>
@@ -34,8 +34,8 @@ export function AccountSettings({
             value={form.clientSecret}
             placeholder={
               form.hasClientSecret
-                ? t("Déjà enregistré · vide pour conserver")
-                : t("Secret de ton application OAuth")
+                ? t("Already saved · leave blank to keep")
+                : t("Your OAuth application secret")
             }
             onChange={(event) => field("clientSecret", event.target.value)}
             autoComplete="new-password"
@@ -44,25 +44,21 @@ export function AccountSettings({
       </div>
       <p>
         {t(
-          "Les identifiants restent dans le service local. La bibliothèque fonctionne aussi sans connexion à osu!.",
+          "Credentials stay in the local service. The library also works without connecting to osu!.",
         )}
       </p>
       <label>
-        {t("Adresse de retour OAuth à enregistrer sur osu!")}
+        {t("OAuth callback URL to register on osu!")}
         <input readOnly value={redirectUri} onFocus={(event) => event.currentTarget.select()} />
       </label>
-      <p>
-        {t(
-          "Après enregistrement, clique sur le profil en haut à droite pour autoriser l’accès à ton compte.",
-        )}
-      </p>
+      <p>{t("After saving, click the profile in the top right to authorize account access.")}</p>
       <a
         className="text-link"
         href="https://osu.ppy.sh/home/account/edit#oauth"
         target="_blank"
         rel="noreferrer"
       >
-        {t("Créer une application OAuth osu!")}
+        {t("Create an osu! OAuth application")}
         <ExternalLink size={13} />
       </a>
     </section>

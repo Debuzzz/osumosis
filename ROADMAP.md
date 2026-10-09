@@ -1,118 +1,121 @@
-# osu!mosis — feuille de route
+# osu!mosis — roadmap
 
-## Livré dans 0.1
+## Delivered in 0.1
 
-- [x] Service terminal + interface React/Vite sur localhost.
-- [x] Catalogue SQLite, indexation `.osu` et métadonnées `osu!.db`.
-- [x] Collections stable, références manquantes conservées.
-- [x] Recherche textuelle/comparateurs, filtres, cartes et détails.
-- [x] Médias locaux et cache des miniatures en ligne.
-- [x] Calculs locaux de difficulté, strain et PP avec mods.
-- [x] Connexion tosu et journal de tentatives avec erreurs par intervalle.
-- [x] Découverte officielle, curseurs, cache, budget partagé 5/min.
-- [x] Recommandations initiales par difficulté, diversité et historique.
+- [x] Terminal service and React/Vite interface on localhost.
+- [x] SQLite catalogue, `.osu` indexing and `osu!.db` metadata.
+- [x] Stable collections, retaining missing map references.
+- [x] Text search/comparators, filters, cards and map details.
+- [x] Local media and cached online thumbnails.
+- [x] Local difficulty, strain and PP calculations with mods.
+- [x] tosu connection and attempt history with errors recorded as intervals.
+- [x] Official discovery, cursors, cache and a shared five-searches-per-minute budget.
+- [x] Initial recommendations based on difficulty, diversity and history.
 
-## Profil et recommandations personnalisées
+## Profile and personalized recommendations
 
-- [x] OAuth utilisateur `public identify` avec callback local, state et refresh token ; profil public en cache.
-- [ ] Valider le flux OAuth avec un compte réel et préparer l’authentification de la distribution publique (sans secret embarqué).
-- [ ] Snapshots des tops, scores récents et profil par ruleset ; cache partagé.
-- [ ] Import versionné de `scores.db`, sans supposer qu’il contient les frames de replay.
-- [ ] Profil par mode, mods/vitesse, caractéristiques et performances comparables.
-- [ ] Scénarios d’accuracy issus de l’historique et confiance explicite.
-- [ ] Gain pondéré de PP : classement connu, remplacement du score pertinent, distinction entre PP bruts et gain de total.
-- [ ] Historique des recommandations, feedback, exclusions, favoris et file à jouer.
-- [ ] Training et Similar à partir des patterns, avec heuristiques documentées.
-- [ ] Pré-calcul progressif des caractéristiques ; calcul avec mods des candidats retenus.
-- [ ] Acquisition ciblée des fichiers d’analyse non installés quand leur accès est disponible, sans installation implicite.
-- [ ] Découverte sur deux pages maximum par travail, progression et annulation.
-- [ ] Import streamé de datasets officiels fournis par l’utilisateur.
+- [x] User OAuth with `public identify`, local callback, state and refresh tokens; cached public profile.
+- [ ] Validate OAuth with a real account and prepare public distribution authentication without an embedded secret.
+- [ ] Snapshot top plays, recent scores and profiles by ruleset, using shared cache.
+- [ ] Versioned `scores.db` import without assuming it contains replay frames.
+- [ ] Profiles by mode, mods/speed, characteristics and comparable performances.
+- [ ] Accuracy scenarios derived from history, with explicit confidence.
+- [ ] Weighted PP gains: known ranking, replacement of the relevant score, and distinction between raw PP and total PP gains.
+- [ ] Recommendation history, feedback, exclusions, favorites and a play queue.
+- [ ] Training and Similar scenarios based on patterns, with documented heuristics.
+- [ ] Progressive feature precomputation; calculate shortlisted candidates with mods.
+- [ ] Targeted acquisition of uninstalled analysis files when available, without implicit installation.
+- [ ] Discovery limited to two pages per job, with progress and cancellation.
+- [ ] Stream user-provided official datasets.
 
-## Plays et replays
+## Plays and replays
 
-- [x] Corriger la détection partie/replay (statut tosu dédié), finaliser les résultats et exposer un diagnostic de capture avec journal local.
-- [x] En direct : fond local, compteurs compacts, PP observés/FC et scénarios transmis par tosu.
-- [x] Vue commune direct/historique, modes automatique et manuels, widgets partagés avec les tentatives sauvegardées.
-- [x] Snapshot des scores et statistiques pour les nouvelles captures ; anciennes données affichées sans champs inventés.
-- [x] Chronologie et erreurs horizontalement, regroupement des erreurs dans la même seconde.
+- [x] Correct gameplay/replay detection using the dedicated tosu status channel, settle results and expose capture diagnostics with a local log.
+- [x] Live view: local background, compact counters, observed/FC PP and scenarios from tosu.
+- [x] Combined live/history view, automatic and manual modes, and shared widgets for saved attempts.
+- [x] Score/statistics snapshots for new captures; display older data without inventing missing fields.
+- [x] Side-by-side timeline and errors, grouping errors within the same second.
 
-- [ ] Flux tosu précis, erreurs de timing et touches ; normalisation par version/capacités.
-- [ ] Séries de vie, UR et timing compressées ; pauses et trous de connexion explicites.
-- [ ] Import/indexation `.osr` et association au checksum exact.
-- [ ] Extension lazer des replays : statistiques, mods avec paramètres, pauses et IDs de scores.
-- [ ] Lecteur Canvas avec cursor/keys, audio, navigation, vitesse et boucle.
-- [ ] Reconstruction osu!standard prenant en compte stacking, sliders, fenêtres et règles historiques.
-- [ ] Comparaison des jugements reconstruits aux statistiques du replay ; sinon analyse partielle.
-- [ ] Chronologie strain/accuracy/combo/PP/timing alignée à la map, avec axes tenant compte de la vitesse.
-- [ ] Analyse taiko/mania/catch suivant leurs règles propres et capacités validées.
-- [ ] Comparaison des tentatives compatibles et heatmaps d’erreurs fiables.
-- [ ] Téléchargement de replay via API lorsqu’il est disponible, cache et gestion des refus.
-- [ ] Statistiques de session, biais early/late, régularité et sections problématiques.
+- [ ] Precise tosu events, timing errors and keys, normalized by version/capabilities.
+- [ ] Compressed health, UR and timing series; explicit pauses and connection gaps.
+- [ ] Import/index `.osr` files and associate them with the exact checksum.
+- [ ] Lazer replay extensions: statistics, parameterized mods, pauses and score IDs.
+- [ ] Canvas player with cursor/keys, audio, seeking, speed and looping.
+- [ ] osu!standard reconstruction accounting for stacking, sliders, hit windows and historical rules.
+- [ ] Compare reconstructed judgments with replay statistics; otherwise mark analysis as partial.
+- [ ] Map-aligned strain/accuracy/combo/PP/timing timelines, with speed-aware axes.
+- [ ] taiko/mania/catch analysis using their own rules and validated capabilities.
+- [ ] Compare compatible attempts and produce reliable error heatmaps.
+- [ ] Download replays through the API when available, with caching and refusal handling.
+- [ ] Session statistics, early/late bias, consistency and problematic sections.
 
-## Bibliothèque enrichie
+## Enriched library
 
-- [ ] Collections de l’application et collections intelligentes.
-- [ ] Export de collections vers un nouveau fichier, sans écraser la base du jeu.
-- [ ] Tags, notes, sauvegarde et restauration, exports CSV/JSON.
-- [ ] Parseur commun de recherche vers SQL et API : AST, unités, dates et aliases documentés.
-- [ ] Filtres PP, accuracy, misses, sliderbreaks, replay et caractéristiques.
-- [x] Filtres de métadonnées visibles (tags, source, mapper, version) et recherche dans les recommandations.
-- [x] Chargement au scroll par lots de 20 sets complets, avec filtres et tri locaux.
-- [ ] Virtualisation pour les listes importantes.
-- [ ] Provenance/fraîcheur des champs et résolution explicite des conflits local/API.
-- [ ] Lecture des durées/BPM variables et fins de sliders via le moteur de map.
-- [ ] Détection de doublons et comparaison des révisions.
+- [ ] Application collections and smart collections.
+- [ ] Export collections to a new file without overwriting the game's database.
+- [ ] Tags, notes, backup/restore and CSV/JSON exports.
+- [ ] Shared SQL/API search parser: AST, units, dates and documented aliases.
+- [ ] PP, accuracy, misses, sliderbreaks, replay and characteristic filters.
+- [x] Visible metadata filters (tags, source, mapper, version) and recommendation search.
+- [x] Scroll loading in batches of 20 complete sets, with local filters and sorting.
+- [ ] Virtualize large lists.
+- [ ] Field provenance/freshness and explicit local/API conflict resolution.
+- [ ] Read variable durations/BPM and slider ends through the map engine.
+- [ ] Detect duplicates and compare revisions.
 
-## Lazer et exploitation
+## Lazer and operations
 
-- [x] Deux profils stable/lazer, lazer par défaut pour les nouvelles configurations, migration des anciens réglages.
-- [x] Simulations stable/lazer et séparation des caches par client.
-- [x] Prototype Realm sur copie en lecture seule, validation des champs du schéma, maps, médias et collections.
-- [x] Valider le module natif Realm et des indexations successives d’une base synthétique dans le cloud, sans modification de la source.
-- [ ] Valider la lecture sur une bibliothèque réelle lazer Windows, plusieurs versions, fichiers manquants et sets supprimés.
-- [x] Lancement npm documenté et commande de vérification des dépendances natives.
-- [ ] Import d’exports `.osz`, `.osr`, `collection.db` en solution de repli.
-- [ ] Adaptateurs d’ouverture stable/lazer/replay, capacités du gestionnaire de protocole explicites.
-- [ ] Commande de recommandation dans la CLI.
-- [ ] Tableau de diagnostic des capacités, quotas, appels API, cache et fraîcheur.
-- [ ] Reprise des travaux, migrations et limites de caches reproductibles.
-- [x] Configuration Tauri 2, runtime Node compagnon et ressources natives préparés pour l’OS de build.
-- [x] Workflow GitHub Actions Windows/macOS/Linux, artefacts manuels et release en brouillon sur tag.
-- [ ] Compiler et essayer les installateurs sur les OS cibles ; versionner le premier Cargo.lock validé.
-- [ ] Signature Windows, notarisation macOS et stratégie de mises à jour.
+- [x] Separate stable/lazer profiles, lazer as the default for new configurations, and migration of older settings.
+- [x] Stable/lazer calculations with separate client caches.
+- [x] Read-only Realm snapshot prototype with schema-field validation, maps, media and collections.
+- [x] Validate native Realm and repeated indexing of a synthetic database in the cloud without changing the source.
+- [ ] Validate real Windows lazer libraries across versions, missing files and deleted sets.
+- [x] Document npm startup and provide a native dependency check.
+- [ ] Import exported `.osz`, `.osr` and `collection.db` files as a fallback.
+- [ ] Stable/lazer/replay opening adapters with explicit protocol-handler capabilities.
+- [ ] CLI recommendation command.
+- [ ] Capability, quota, API-call, cache and freshness diagnostic dashboard.
+- [ ] Resumable jobs, migrations and reproducible cache limits.
+- [x] Tauri 2 configuration, companion Node runtime and native resources prepared for the build OS.
+- [x] GitHub Actions Windows/macOS/Linux workflow, manual artifacts and draft releases on tags.
+- [x] Track Cargo.lock for reproducible desktop dependency resolution.
+- [ ] Build and test installers on target operating systems.
+- [ ] Windows signing, macOS notarization and update strategy.
 
-## Interface et distribution (0.2 en préparation)
+## Interface and distribution
 
-- [x] Un seul accès principal aux Réglages, profil osu! en haut à droite.
-- [x] Navigation compacte, focus visible, lien d’évitement, dialogs natifs et prise en compte du mouvement réduit.
-- [x] Base de localisation i18next, français/anglais et choix de langue persistant.
-- [x] CHANGELOG suivant Keep a Changelog, notes dans l’app et génération des notes de release.
-- [ ] Audit visuel et clavier sur les WebViews réelles, contrastes et libellés longs.
-- [ ] Traduction structurée des erreurs métier du backend et prise en charge RTL.
-- [ ] Fusion bibliothèque/recommandations, filtres de mods et farm fondé sur les gains de PP.
-- [ ] Widgets personnalisables pour le direct et les tentatives.
-- [ ] Éditeur de thème CSS dans les Réglages, aperçu et restauration du thème par défaut.
+- [x] One main Settings entry and the osu! profile in the top-right corner.
+- [x] Compact navigation, visible focus, skip link, native dialogs and reduced-motion support.
+- [x] i18next localization, English/French and persistent language selection.
+- [x] English source/default/fallback language, matching translation keys and language-behavior checks.
+- [x] Keep a Changelog history, in-app notes and generated release notes.
+- [ ] Visual and keyboard audits on real WebViews, contrast and long labels.
+- [ ] Structured translation of backend domain errors and RTL support.
+- [ ] Merge library/recommendations, add mod filters and farm scenarios based on PP gains.
+- [ ] Customizable widgets for live views and saved attempts.
+- [ ] CSS theme editor in Settings, with preview and default-theme restoration.
 
-## Structure et qualité du code
+## Code structure and quality
 
-- [x] Monolithe modulaire : backend découpé par fonctionnalités, routes, services et repositories.
-- [x] App limité à la composition globale ; vues, composants, hooks, outils et styles séparés.
-- [x] Contrat RPC typé, contrôle des dépendances et limite de taille des fichiers applicatifs.
-- [x] Hooks de commit/push et CI Windows/Linux : lint sans avertissement, format, types, architecture, tests et build.
+- [x] Modular monolith: backend features with routes, services and repositories.
+- [x] App limited to global composition; separate views, components, hooks, tools and styles.
+- [x] Typed RPC contract, dependency checks and application file-size limits.
+- [x] Commit/push hooks and Windows/Linux CI: warning-free lint, formatting, types, architecture, tests and builds.
+- [x] Project agent instructions and a development skill covering architecture, local-first behavior, localization and versioned PRs.
 
-## IA locale optionnelle, après le moteur de recommandations
+## Optional local AI, after the recommendation engine
 
-- [ ] Compléter d’abord le profil, les tops, les scénarios avec mods et le gain pondéré de PP calculé par le moteur.
-- [ ] Normaliser les métadonnées (tags, source, mapper, difficulté) et les caractéristiques dérivées des objets, avec provenance et confiance.
-- [ ] Index de similarité local avec embeddings précalculés et cache par checksum/version de modèle ; mises à jour incrémentales.
-- [ ] Adaptateur optionnel pour un modèle local via llama.cpp ou Ollama, sans chargement obligatoire pendant le jeu.
-- [ ] Transformer une demande en langage naturel en filtres structurés validés par le parseur, puis expliquer les candidats sélectionnés.
-- [ ] Modèle de raisonnement optionnel pour les explications complexes ; budget CPU/GPU/RAM configurable et fonctionnement sans IA conservé.
+- [ ] First complete profiles, top plays, mod scenarios and engine-calculated weighted PP gains.
+- [ ] Normalize metadata (tags, source, mapper, difficulty) and object-derived characteristics, with provenance and confidence.
+- [ ] Local similarity index with precomputed embeddings, checksum/model-version caches and incremental updates.
+- [ ] Optional local model adapter through llama.cpp or Ollama, without mandatory loading during gameplay.
+- [ ] Convert natural-language requests into parser-validated structured filters, then explain selected candidates.
+- [ ] Optional reasoning model for complex explanations, with configurable CPU/GPU/RAM budgets and retained operation without AI.
 
-Le modèle utilise le catalogue et les analyses connues. Il ne crée pas d’appels osu! implicites, ne calcule pas les PP à la place de rosu et ne traite pas un tag « farm » comme preuve de gain. Aucun modèle ni runtime IA n’est ajouté à cette livraison.
+The model uses the known catalogue and analyses. It must not create implicit osu! calls, replace rosu PP calculations or treat a "farm" tag as proof of gains. This delivery does not include an AI model or runtime.
 
-## Validation à réaliser quand demandée
+## Validation when requested
 
-Bases de plusieurs versions, bibliothèque partielle, maps non soumises, map modifiée, anciens replays, imports de collections absentes, mode hors ligne, API 429, requêtes simultanées, coupures de tosu, pause/retry/fail, exactitude PP/jugements et charge pendant le jeu.
+Databases from multiple versions, partial libraries, unsubmitted/modified maps, old replays, missing collection imports, offline use, API 429 responses, concurrent requests, tosu disconnects, pause/retry/fail, PP/judgment correctness and load during gameplay.
 
-Le build de production est une étape de livraison. Des tests ciblés couvrent désormais la migration des réglages, les profils, les chemins hashés, les frontières de fichiers et les caches de calcul. `npm run test:realm` couvre séparément une base Realm synthétique et nécessite le module natif. Les intégrations au jeu et à un compte osu! nécessitent encore des essais avec des données réelles.
+The production build is one delivery step. Targeted tests cover settings migration, profiles, hashed paths, filesystem boundaries, calculation caches and localization. `npm run test:realm` separately covers a synthetic Realm database and requires the native module. Game and osu! account integrations still need testing with real data.

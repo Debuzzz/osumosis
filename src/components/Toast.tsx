@@ -6,7 +6,7 @@ export function Toast({ message, onClose }: { message: string; onClose: () => vo
     <div className="toast" role="status">
       <CircleHelp size={18} />
       <span>{message}</span>
-      <button onClick={onClose} aria-label={t("Fermer")}>
+      <button onClick={onClose} aria-label={t("Close")}>
         <X size={15} />
       </button>
     </div>

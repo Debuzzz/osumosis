@@ -61,12 +61,12 @@ export default function App() {
   return (
     <div className="app-shell">
       <a className="skip-link" href="#main-content">
-        {t("Aller au contenu")}
+        {t("Skip to content")}
       </a>
       {compact && navigationOpen && (
         <button
           className="navigation-backdrop"
-          aria-label={t("Fermer la navigation")}
+          aria-label={t("Close navigation")}
           tabIndex={-1}
           onClick={closeNavigation}
         />
@@ -99,7 +99,7 @@ export default function App() {
         <main id="main-content" tabIndex={-1}>
           {status.isError && (
             <div className="error-box">
-              {t("Service local indisponible :")} {status.error.message}
+              {t("Local service unavailable:")} {status.error.message}
             </div>
           )}
           {page === "library" && (

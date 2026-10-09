@@ -53,9 +53,9 @@ export function LibraryFilters({
       <div className="source-tabs">
         {(
           [
-            ["local", t("Installées"), FolderOpen],
-            ["cached", t("Catalogue"), Database],
-            ["new", t("Découvrir"), Sparkles],
+            ["local", t("Installed maps"), FolderOpen],
+            ["cached", t("Catalog"), Database],
+            ["new", t("Discover"), Sparkles],
           ] as const
         ).map(([id, label, Icon]) => (
           <button
@@ -71,15 +71,15 @@ export function LibraryFilters({
         ))}
         <span className="source-note">
           {source === "new"
-            ? t("Réseau sur demande · 5 appels / min")
-            : t("Recherche locale · aucun appel API")}
+            ? t("Network on demand · 5 requests / min")
+            : t("Local search · no API requests")}
         </span>
       </div>
       <div className="search-input">
         <Search size={21} />
         <input
-          aria-label={t("Rechercher des maps")}
-          placeholder={t("Artiste, titre, mapper… ou stars>=5 bpm>180")}
+          aria-label={t("Search maps")}
+          placeholder={t("Artist, title, mapper… or stars>=5 bpm>180")}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => {
@@ -87,11 +87,7 @@ export function LibraryFilters({
           }}
         />
         {query && (
-          <button
-            className="icon-button"
-            title={t("Effacer la recherche")}
-            onClick={() => setQuery("")}
-          >
+          <button className="icon-button" title={t("Clear search")} onClick={() => setQuery("")}>
             <X size={16} />
           </button>
         )}
@@ -99,7 +95,7 @@ export function LibraryFilters({
           className={`icon-button ${help ? "selected" : ""}`}
           aria-expanded={help}
           onClick={() => setHelp(!help)}
-          title={t("Syntaxe de recherche")}
+          title={t("Search syntax")}
         >
           <CircleHelp size={18} />
         </button>
@@ -113,7 +109,7 @@ export function LibraryFilters({
           <code>tags="stream" source="Touhou"</code>
           <p>
             {t(
-              "Champs : stars, bpm, length (secondes), ar, od, cs, hp, objects, artist, title, creator, version, tag, status, local, played. Les filtres avancés de PP arriveront avec le profil joueur.",
+              "Fields: stars, bpm, length (seconds), ar, od, cs, hp, objects, artist, title, creator, version, tags, source, status, local, played. Advanced PP filters will arrive with player profiles.",
             )}
           </p>
         </div>
@@ -121,7 +117,7 @@ export function LibraryFilters({
       <div className="filter-row">
         <span className="filter-label">{t("Mode")}</span>
         <div className="chips">
-          {[["any", t("Tous")], ...modes.map((name, i) => [String(i), name])].map(
+          {[["any", t("All")], ...modes.map((name, i) => [String(i), name])].map(
             ([value, label]) => (
               <button
                 key={value}
@@ -140,14 +136,14 @@ export function LibraryFilters({
           onClick={() => setAdvanced(!advanced)}
         >
           <SlidersHorizontal size={14} />
-          {t("Filtres")}
+          {t("Filters")}
         </button>
       </div>
       <div className="filter-row">
-        <span className="filter-label">{t("Statut")}</span>
+        <span className="filter-label">{t("Status")}</span>
         <div className="chips">
           {[
-            ["any", t("Tous")],
+            ["any", t("All")],
             ["ranked", "Ranked"],
             ["loved", "Loved"],
             ["qualified", "Qualified"],
@@ -171,7 +167,7 @@ export function LibraryFilters({
             <label>
               {t("Collection")}
               <select value={collection} onChange={(e) => setCollection(e.target.value)}>
-                <option value="">{t("Toutes les collections")}</option>
+                <option value="">{t("All collections")}</option>
                 {collections.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name} ({c.installed}/{c.total})
@@ -180,11 +176,11 @@ export function LibraryFilters({
               </select>
             </label>
             <div>
-              <span className="field-label">{t("Raccourcis")}</span>
+              <span className="field-label">{t("Shortcuts")}</span>
               <div className="chips">
                 {[
-                  [t("Jamais observée"), "played=false"],
-                  [t("Courte (< 2 min)"), "length<120"],
+                  [t("Never observed"), "played=false"],
+                  [t("Short (< 2 min)"), "length<120"],
                   ["5–6 ★", "stars>=5 stars<6"],
                 ].map(([name, predicate]) => (
                   <button
@@ -202,14 +198,14 @@ export function LibraryFilters({
       )}
       {source === "new" && (
         <div className="discovery-row">
-          <p>{t("Les découvertes restent dans le catalogue, même sans téléchargement.")}</p>
+          <p>{t("Discovered maps stay in the catalog, even without downloading.")}</p>
           <button
             className="primary-button small"
             onClick={() => void discover()}
             disabled={discovering}
           >
             {discovering ? <LoaderCircle size={14} className="spin" /> : <Sparkles size={14} />}
-            {t("Chercher en ligne")}
+            {t("Search online")}
           </button>
           {hasMore && (
             <button
@@ -217,7 +213,7 @@ export function LibraryFilters({
               onClick={() => void discover(true)}
               disabled={discovering}
             >
-              {t("Découvrir davantage")}
+              {t("Discover more")}
             </button>
           )}
         </div>

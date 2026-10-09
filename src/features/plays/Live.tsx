@@ -7,37 +7,37 @@ import { PlayTimeline } from "./components/PlayTimeline";
 export function Live({ live, onSettings }: { live: LiveState; onSettings: () => void }) {
   const capture = live.capture;
   const labels: Record<string, string> = {
-    play: t("En partie"),
-    playing: t("En partie"),
-    resultScreen: t("Résultat"),
-    selectPlay: t("Sélection de map"),
+    play: t("Playing"),
+    playing: t("Playing"),
+    resultScreen: t("Result"),
+    selectPlay: t("Map selection"),
   };
   const state =
     capture?.mode === "replay"
-      ? t("Lecture replay")
+      ? t("Replay playback")
       : live.paused
-        ? t("En pause")
+        ? t("Paused")
         : labels[live.state] || live.state;
   return (
-    <section className="live-view" aria-label={t("En direct")}>
+    <section className="live-view" aria-label={t("Live")}>
       <div className="performance-heading">
-        <h2>{t("Dans le rythme")}</h2>
+        <h2>{t("In the groove")}</h2>
         <span className={`status-pill ${live.connected ? "connected" : ""}`}>
           <Radio size={14} />
-          {live.connected ? state : t("En attente de tosu")}
+          {live.connected ? state : t("Waiting for tosu")}
         </span>
       </div>
       {!live.connected ? (
         <div className="empty-panel large">
           <Radio size={38} />
-          <h2>{t("Prêt quand tu l’es.")}</h2>
+          <h2>{t("Ready when you are.")}</h2>
           <p>
             {t(
-              "Démarre osu! et tosu. La connexion locale sera réessayée automatiquement toutes les cinq secondes.",
+              "Start osu! and tosu. The local connection retries automatically every five seconds.",
             )}
           </p>
           <button className="secondary-button" onClick={onSettings}>
-            {t("Vérifier l’adresse tosu")}
+            {t("Check the tosu address")}
           </button>
         </div>
       ) : (
@@ -56,17 +56,15 @@ export function Live({ live, onSettings }: { live: LiveState; onSettings: () => 
           <div className="live-capture-status" role="status">
             <Check size={16} />
             <div>
-              <strong>
-                {capture?.reason ? t(capture.reason) : t("En attente de la télémétrie.")}
-              </strong>
+              <strong>{capture?.reason ? t(capture.reason) : t("Waiting for telemetry.")}</strong>
               <span>
-                {capture?.partial ? t("Capture commencée en cours de partie. ") : ""}
-                {capture?.mode === "unknown" ? t("Mode partie/replay non confirmé par tosu. ") : ""}
+                {capture?.partial ? t("Capture started during gameplay. ") : ""}
+                {capture?.mode === "unknown" ? t("Play/replay mode not confirmed by tosu. ") : ""}
                 {capture?.lastSavedAt
-                  ? t("Dernière sauvegarde à {{p0}}.", {
+                  ? t("Last saved at {{p0}}.", {
                       p0: new Date(capture.lastSavedAt).toLocaleTimeString(locale()),
                     })
-                  : t("Les tentatives jouées sont sauvegardées localement à leur fin.")}
+                  : t("Played attempts are saved locally when they end.")}
               </span>
             </div>
           </div>

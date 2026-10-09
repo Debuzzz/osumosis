@@ -9,14 +9,14 @@ export function MetadataFilters({
   onChange: (query: string) => void;
 }) {
   const fields: { field: MetadataField; label: string; placeholder: string }[] = [
-    { field: "tags", label: t("Tags de la map"), placeholder: "stream, jump, tech…" },
-    { field: "source", label: t("Source du morceau"), placeholder: t("Anime, jeu, album…") },
-    { field: "creator", label: t("Mapper"), placeholder: t("Nom du mapper") },
-    { field: "version", label: t("Nom de difficulté"), placeholder: "Insane, Extra…" },
+    { field: "tags", label: t("Map tags"), placeholder: "stream, jump, tech…" },
+    { field: "source", label: t("Song source"), placeholder: t("Anime, game, album…") },
+    { field: "creator", label: t("Mapper"), placeholder: t("Mapper name") },
+    { field: "version", label: t("Difficulty name"), placeholder: "Insane, Extra…" },
   ];
   return (
     <fieldset className="metadata-filters">
-      <legend>{t("Métadonnées")}</legend>
+      <legend>{t("Metadata")}</legend>
       <div className="metadata-filter-grid">
         {fields.map(({ field, label, placeholder }) => (
           <label key={field}>
@@ -31,7 +31,7 @@ export function MetadataFilters({
       </div>
       <p>
         {t(
-          "Ces champs ajoutent des filtres à la recherche. Les tags décrivent la map, mais ne prouvent pas son potentiel de farm.",
+          "These fields add search filters. Tags describe a map but do not prove its farming potential.",
         )}
       </p>
     </fieldset>

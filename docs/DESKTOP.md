@@ -1,55 +1,49 @@
-# Desktop Tauri
+# Tauri desktop
 
-Tauri 2 affiche React/CSS dans la WebView système et lance un processus Node compagnon. Le moteur web est celui du système (WebView2 sous Windows, WKWebView sous macOS, WebKitGTK sous Linux). La personnalisation CSS reste possible ; Tauri apporte la fenêtre et l’intégration desktop.
+Tauri 2 displays React/CSS in the system WebView and launches a Node sidecar. It uses WebView2 on Windows, WKWebView on macOS and WebKitGTK on Linux. Tauri supplies the native window and desktop integration; the UI remains a web UI that can be customized with CSS.
 
-## Prérequis de développement
+## Development prerequisites
 
-- Node.js LTS 22.12+ et npm ; version 24 utilisée par la CI.
-- Rust stable et Cargo via https://rustup.rs/.
-- Windows : outils de compilation C++ de Visual Studio Build Tools, composant Desktop development with C++, SDK Windows et WebView2. Choisir les mêmes architecture et ABI pour Rust et Node (x64 conseillé).
-- macOS : Xcode Command Line Tools (`xcode-select --install`).
-- Linux : WebKitGTK 4.1, GTK 3, librsvg, OpenSSL, libxdo, outils C/C++ et patchelf. La CI installe les paquets Ubuntu nécessaires.
+- A current Node.js LTS release (22.13+ for development) and npm. Desktop CI uses Node 24; quality CI uses Node 22.
+- Stable Rust and Cargo from https://rustup.rs/.
+- Windows: Visual Studio Build Tools with **Desktop development with C++**, the Windows SDK and WebView2. Rust and Node must use matching CPU architectures and ABIs; x64 is recommended.
+- macOS: Xcode Command Line Tools (`xcode-select --install`).
+- Linux: WebKitGTK 4.1, GTK 3, librsvg, OpenSSL, libxdo, C/C++ build tools and patchelf. The desktop workflow lists the required Ubuntu packages.
 
-Depuis le dépôt, sans script PowerShell :
+From the repository, in cmd.exe or a shell:
 
-```bat
+```sh
 npm ci
 npm run desktop:info
 npm run desktop:dev
 ```
 
-`desktop:dev` construit le frontend/backend et prépare le processus compagnon avant de lancer la fenêtre. Ce premier workflow privilégie un build local reproductible ; pour le rechargement à chaud, `npm run dev` reste disponible dans le navigateur.
+`desktop:dev` builds the frontend/backend and prepares the sidecar before opening the window. Use `npm run dev` in the browser for hot reload.
 
-Fermer le serveur `npm start` avant de lancer la version desktop : le port 3000 est réservé au backend et au callback OAuth. Tauri refuse de se connecter à un service déjà présent sur ce port.
+Close any `npm start` backend before starting desktop mode. Port 3000 is reserved for the backend and OAuth callback; Tauri refuses to attach to another service already using it. After installing Rust, restart your terminal so Cargo is on PATH. For Git Bash, add the Cargo bin directory to that shell's PATH using its startup configuration if necessary.
 
-## Backend embarqué et données
+## Bundled backend and data
 
-`scripts/prepare-desktop.mjs` copie le runtime Node de la machine de build vers `src-tauri/binaries/osumosis-node-<target>` et installe les dépendances de production pour ce même OS/CPU dans `.desktop/backend`. Le frontend, les workers et les modules natifs sont ajoutés aux ressources. Les bibliothèques mobiles inutilisées du paquet Realm sont retirées uniquement de cette copie pour réduire la taille.
+`scripts/prepare-desktop.mjs` copies the build machine's Node runtime into `src-tauri/binaries/osumosis-node-<target>` and installs production dependencies for the same OS/CPU in `.desktop/backend`. The frontend, workers and native modules are bundled as resources. Unused Realm mobile libraries and the WiX-incompatible `@fastify/send/test` fixtures are removed only from this staged copy.
 
-Cette étape nécessite l’accès npm/GitHub/static.realm.io et le même runtime Node que les modules installés. Aucun Node/npm n’est requis sur le PC qui installe ensuite l’application. La compilation croisée n’est pas supportée : chaque OS est construit sur un runner correspondant.
+Preparation needs npm/GitHub/`static.realm.io` access and the same Node runtime used by the installed native modules. The runtime license is retained; retrieving it may also require `raw.githubusercontent.com` when no local Node LICENSE is available. Development lifecycle hooks are omitted from the staged manifest while dependency install scripts remain enabled. End users will not need to install Node/npm. Cross-compiling native modules is unsupported; build each OS on a matching runner.
 
-Rust démarre le backend, attend le marqueur de disponibilité propre au processus et ouvre la fenêtre sur `http://127.0.0.1:3000`. Les commandes shell ne sont pas accessibles au frontend. Les seules permissions ajoutées à l’interface ouvrent les liens approuvés osu!/GitHub/tosu dans leur application système.
+Rust starts the backend, waits for its instance-specific readiness marker and opens `http://127.0.0.1:3000`. Shell commands are not exposed to the frontend. UI permissions only allow approved osu!/GitHub/tosu links to open through the system.
 
-Les données desktop se trouvent dans le répertoire d’application de l’identifiant `io.github.debuzzz.osumosis`, résolu par Tauri (`app_data_dir`). Il est distinct du `.data` du dépôt ; les chemins osu! sont donc à renseigner lors du premier lancement desktop. Pour reprendre l’ancien catalogue, fermer les deux services puis copier le contenu de `.data` dans ce répertoire. Le chemin exact est indiqué dans `desktop-backend.log` au démarrage.
+Desktop data uses Tauri's `app_data_dir` for `io.github.debuzzz.osumosis`, separate from the repository's `.data`. Configure your osu! paths at first launch. To reuse an existing catalogue, stop both services and copy `.data` contents into the desktop application data directory. The resolved path is logged at startup in `desktop-backend.log`.
 
-Les logs du backend desktop sont écrits dans `desktop-backend.log`, avec rotation. Le diagnostic de capture reste dans `tosu.log`. L’application demande l’arrêt local du backend à sa fermeture et termine le processus compagnon si nécessaire.
+Backend output goes to rotating `desktop-backend.log`; capture diagnostics remain in `tosu.log`. Closing the window requests local backend shutdown and terminates the sidecar if needed.
 
-## Compiler un installateur
+## Build an installer
 
-```bat
+```sh
 npm run desktop:build
 ```
 
-Les résultats se trouvent dans `src-tauri/target/release/bundle`. La première compilation native génère `Cargo.lock` ; il faudra le versionner après la validation sur une machine équipée de Rust pour figer les dépendances natives.
+Installers are written to `src-tauri/target/release/bundle`. `Cargo.lock` is tracked and its application entry is kept in sync with the npm version. Validate the window, installer and real-game integrations on the target OS.
 
 ## Releases
 
-Le workflow `.github/workflows/desktop.yml` peut être lancé manuellement depuis GitHub Actions pour construire les artefacts Windows/macOS/Linux. Sur un tag `v*`, il crée une **release en brouillon**, avec les notes issues de `CHANGELOG.md`.
+`.github/workflows/desktop.yml` supports manual artifact builds for Windows/macOS/Linux. A published `v*` tag creates a **draft GitHub Release** with notes from `CHANGELOG.md`. Use the [release commands](CONTRIBUTING.md#prepare-a-version) to synchronize npm, Tauri, Cargo and the displayed version before pushing a release tag.
 
-Processus de publication :
-
-1. Déplacer les entrées pertinentes de `[Unreleased]` vers `[x.y.z]` avec la date, et synchroniser `package.json`, le lock npm, `Cargo.toml`, `tauri.conf.json` et les notes affichées dans l’app.
-2. Valider les artefacts sur les OS cibles, puis créer le tag `vx.y.z` sur le commit choisi.
-3. Laisser la CI produire le brouillon ; télécharger et essayer les installateurs avant de publier la release.
-
-La signature Windows, la notarisation macOS et les mises à jour automatiques ne sont pas encore configurées. Les builds actuels servent aux essais ; la distribution publique sera préparée après validation.
+For a PR containing a version bump, push the branch without publishing a release tag, merge it, then tag the accepted release commit. Inspect and test the generated installers before publishing the draft. Windows signing, macOS notarization and automatic updates are still planned; current builds are for testing.

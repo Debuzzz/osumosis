@@ -54,7 +54,7 @@ export function Sidebar({
     >
       <button
         className="mobile-nav-close icon-button"
-        aria-label={t("Fermer la navigation")}
+        aria-label={t("Close navigation")}
         onClick={closeNavigation}
       >
         <X size={20} />
@@ -75,9 +75,9 @@ export function Sidebar({
         </span>
       </button>
       <div className="workspace-label">
-        {t("ESPACE LOCAL")} <span>01</span>
+        {t("LOCAL SPACE")} <span>01</span>
       </div>
-      <nav aria-label={t("Navigation principale")}>
+      <nav aria-label={t("Main navigation")}>
         {nav.map((item) => (
           <button
             key={item.id}
@@ -120,15 +120,15 @@ export function Sidebar({
             </button>
           ))
         ) : (
-          <p>{t("Les collections du jeu apparaîtront après l’indexation.")}</p>
+          <p>{t("Game collections will appear after indexing.")}</p>
         )}
       </div>
       <div className="sidebar-bottom">
         <div className="local-note">
           <Database size={16} />
           <span>
-            {t("Ton catalogue, chez toi.")}
-            <small>{t("SQLite · cache local")}</small>
+            {t("Your catalog, on your computer.")}
+            <small>{t("SQLite · local cache")}</small>
           </span>
         </div>
         <button
@@ -140,10 +140,10 @@ export function Sidebar({
           }}
         >
           <Settings2 size={18} />
-          <span>{t("Réglages")}</span>
+          <span>{t("Settings")}</span>
         </button>
         <button className="version release-trigger" onClick={() => onNotes()}>
-          osu!mosis <span>{t("v{{version}} · Notes de version", { version })}</span>
+          osu!mosis <span>{t("v{{version}} · Release notes", { version })}</span>
         </button>
       </div>
     </aside>

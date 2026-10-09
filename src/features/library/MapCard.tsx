@@ -36,7 +36,7 @@ export function MapCard({
       <button
         className={`card-image ${cover ? "" : "no-cover"}`}
         onClick={() => onSelect(map)}
-        aria-label={t("Ouvrir {{title}}", { title: map.title })}
+        aria-label={t("Open {{title}}", { title: map.title })}
       >
         {cover ? (
           <img
@@ -54,12 +54,12 @@ export function MapCard({
           {map.local ? (
             <>
               <Check size={11} />
-              {t("Installée")}
+              {t("Installed")}
             </>
           ) : (
             <>
               <Database size={11} />
-              {t("En cache")}
+              {t("Cached")}
             </>
           )}
         </span>
@@ -69,7 +69,7 @@ export function MapCard({
         <p>{map.artist}</p>
       </button>
       <div className="mapper">
-        {t("mapped by")} <span>{map.creator || t("inconnu")}</span>
+        {t("mapped by")} <span>{map.creator || t("unknown")}</span>
       </div>
       <div className="difficulty-row">
         <div className="difficulty-dots">
@@ -79,7 +79,7 @@ export function MapCard({
               style={{ background: starColor(m.stars) }}
               title={`${m.version} · ${m.stars?.toFixed(2) ?? "?"} ★`}
               onClick={() => onSelect(m)}
-              aria-label={t("Difficulté {{p0}}", { p0: m.version })}
+              aria-label={t("Difficulty {{p0}}", { p0: m.version })}
             />
           ))}
         </div>
@@ -122,7 +122,7 @@ export function MapCard({
             {map.collections.length}
           </span>
         )}
-        <span className="card-played">{map.played ? t("Jouée") : t("À essayer")}</span>
+        <span className="card-played">{map.played ? t("Played") : t("To try")}</span>
       </div>
       {map.reason && (
         <div className="card-reason">

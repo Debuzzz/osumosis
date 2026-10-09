@@ -44,11 +44,11 @@ export function MapAnalysis({ map }: { map: Beatmap }) {
     <div className="drawer-section">
       <div className="section-title">
         <Activity size={17} />
-        <h3>{t("Difficulté & simulation de PP")}</h3>
+        <h3>{t("Difficulty & PP simulation")}</h3>
       </div>
       <div className="analysis-controls">
         <select
-          aria-label={t("Mods du calcul")}
+          aria-label={t("Calculation mods")}
           value={mods}
           onChange={(e) => setMods(e.target.value)}
         >
@@ -62,14 +62,12 @@ export function MapAnalysis({ map }: { map: Beatmap }) {
           onClick={() => void calculate()}
         >
           {busy ? <LoaderCircle className="spin" size={14} /> : <Activity size={14} />}
-          {t("Calculer localement")}
+          {t("Calculate locally")}
         </button>
       </div>
       {!m.local && (
         <p className="muted">
-          {t(
-            "Le fichier .osu est nécessaire pour ce calcul. Les métadonnées seules restent disponibles.",
-          )}
+          {t("The .osu file is needed for this calculation. Metadata remains available.")}
         </p>
       )}
       {error && <div className="error-box">{error}</div>}
@@ -78,7 +76,7 @@ export function MapAnalysis({ map }: { map: Beatmap }) {
           <div className="analysis-summary">
             <span>
               <Star size={14} fill="currentColor" />
-              {analysis.stars.toFixed(2)} {t("★ avec")} {mods}
+              {analysis.stars.toFixed(2)} {t("★ with")} {mods}
             </span>
             <span>
               {analysis.maxCombo}
@@ -86,7 +84,7 @@ export function MapAnalysis({ map }: { map: Beatmap }) {
             </span>
           </div>
           <Chart
-            label={t("Strain de difficulté de la map")}
+            label={t("Map difficulty strain")}
             series={(["aim", "speed", "strain"] as const)
               .map((field, i) => ({
                 name: [t("Aim"), t("Speed"), t("Strain")][i],
@@ -109,8 +107,8 @@ export function MapAnalysis({ map }: { map: Beatmap }) {
             ))}
           </div>
           <p className="fine-print">
-            {t("Scénarios sans miss calculés pour")} {analysis.client} · {analysis.engine}
-            {t(". Ce sont des estimations locales.")}
+            {t("No-miss scenarios calculated for")} {analysis.client} · {analysis.engine}
+            {t(". These are local estimates.")}
           </p>
         </>
       )}

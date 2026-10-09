@@ -8,7 +8,7 @@ export interface NavigationItem {
   detail?: string;
 }
 export const getNavigationItems = (installed: number): NavigationItem[] => [
-  { id: "library", title: t("Bibliothèque"), icon: Layers3, detail: String(installed) },
-  { id: "recommend", title: t("Pour toi"), icon: Sparkles },
-  { id: "plays", title: t("Tes plays"), icon: Activity },
+  { id: "library", title: t("Library"), icon: Layers3, detail: String(installed) },
+  { id: "recommend", title: t("For you"), icon: Sparkles },
+  { id: "plays", title: t("Your plays"), icon: Activity },
 ];

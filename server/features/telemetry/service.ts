@@ -61,20 +61,20 @@ export class Tosu extends EventEmitter {
       error: this.saveError || this.error,
       statusConnected: !!connected,
       reason: this.saveError
-        ? "Échec de sauvegarde : voir le diagnostic."
+        ? "Save failed: see diagnostics."
         : mode === "replay"
-          ? "Lecture replay : aucune tentative ajoutée."
+          ? "Replay playback: no attempt added."
           : this.attempt
             ? this.resultTimer
-              ? "Finalisation du résultat…"
-              : "Tentative en cours de capture."
+              ? "Finalizing result…"
+              : "Capturing attempt."
             : mode === "idle"
-              ? "En attente d’une partie."
+              ? "Waiting for gameplay."
               : this.suppress
-                ? "Tentative déjà terminée ; en attente du prochain départ."
+                ? "Attempt already finished; waiting for the next start."
                 : this.startCandidate
-                  ? "Synchronisation du départ de la map…"
-                  : "En attente de la map et de ses données.",
+                  ? "Synchronizing map start…"
+                  : "Waiting for the map and its data.",
     };
   }
   private publish() {

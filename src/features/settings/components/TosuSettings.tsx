@@ -7,20 +7,20 @@ export function TosuSettings({ form, field }: { form: SettingsForm; field: Setti
     <section className="settings-section">
       <div className="section-title">
         <Radio size={19} />
-        <h2>{t("Télémétrie tosu")}</h2>
+        <h2>{t("Tosu telemetry")}</h2>
       </div>
       <label>
-        {t("Adresse WebSocket")}
+        {t("WebSocket address")}
         <input value={form.tosuUrl} onChange={(event) => field("tosuUrl", event.target.value)} />
       </label>
       <p>
         {t(
-          "tosu doit tourner sur ce PC. L’application se reconnecte automatiquement. Le flux v2 fournit les valeurs ; le flux local /tokens confirme le mode partie/replay.",
+          "Tosu must run on this computer. The application reconnects automatically. The v2 stream provides values; the local /tokens stream confirms play/replay mode.",
         )}
       </p>
       <TosuDiagnostics />
       <a className="text-link" href="https://tosu.app/" target="_blank" rel="noreferrer">
-        {t("Site de tosu")}
+        {t("Tosu website")}
         <ExternalLink size={13} />
       </a>
     </section>

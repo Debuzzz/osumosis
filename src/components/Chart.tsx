@@ -15,7 +15,7 @@ export function Chart({
     .flatMap((s) => s.points)
     .filter((p) => Number.isFinite(p.x) && Number.isFinite(p.y));
   if (!all.length)
-    return <div className="chart-empty">{t("Aucune série disponible pour cette map.")}</div>;
+    return <div className="chart-empty">{t("No series available for this map.")}</div>;
   const maxX = Math.max(1, ...all.map((p) => p.x)),
     maxY = Math.max(1, ...all.map((p) => p.y));
   const x = (v: number) => 42 + (v / maxX) * 558,
@@ -77,7 +77,7 @@ export function Chart({
         {markers.length > 0 && (
           <span>
             <i style={{ background: "#ef8297" }} />
-            {t("Erreurs observées")}
+            {t("Observed errors")}
           </span>
         )}
       </div>

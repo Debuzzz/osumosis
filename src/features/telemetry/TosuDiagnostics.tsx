@@ -14,11 +14,9 @@ export function TosuDiagnostics() {
   });
   return (
     <details className="tosu-diagnostics">
-      <summary>{t("Diagnostic de capture tosu")}</summary>
+      <summary>{t("Tosu capture diagnostics")}</summary>
       <p>
-        {t(
-          "Le journal contient les connexions, changements d’état et sauvegardes ; il est aussi écrit dans",
-        )}{" "}
+        {t("The log contains connections, state changes and saves; it is also written to")}{" "}
         <code>{t(".data/tosu.log")}</code>.
       </p>
       {query.isError && <div className="error-box">{query.error.message}</div>}
@@ -26,14 +24,14 @@ export function TosuDiagnostics() {
         <>
           <div className="diagnostic-stats">
             <span>
-              {query.data.capture.messages.toLocaleString(locale())} {t("messages reçus")}
+              {query.data.capture.messages.toLocaleString(locale())} {t("messages received")}
             </span>
             <span>
-              {query.data.capture.saved} {t("tentatives sauvegardées depuis le démarrage")}
+              {query.data.capture.saved} {t("attempts saved since startup")}
             </span>
             <span>
-              {t("Statut partie/replay :")}{" "}
-              {query.data.capture.statusConnected ? t("connecté") : t("indisponible")}
+              {t("Play/replay status:")}{" "}
+              {query.data.capture.statusConnected ? t("connected") : t("unavailable")}
             </span>
           </div>
           {query.data.capture.error && (

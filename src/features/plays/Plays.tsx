@@ -76,19 +76,19 @@ export function Plays({ live, onSettings }: { live: LiveState; onSettings: () =>
             {t("MAKE EVERY ATTEMPT COUNT")}
           </div>
           <h1>
-            {t("Tes plays")}
+            {t("Your plays")}
             <span>.</span>
           </h1>
-          <p>{t("Le direct pendant la partie, tes tentatives quand tu reviens au menu.")}</p>
+          <p>{t("Live while you play, your attempts when you return to the menu.")}</p>
         </div>
       </div>
       <div className="plays-navigation">
-        <div className="plays-mode" role="group" aria-label={t("Affichage des plays")}>
+        <div className="plays-mode" role="group" aria-label={t("Play display")}>
           {(
             [
-              ["auto", t("Automatique")],
-              ["history", t("Historique")],
-              ["live", t("En direct")],
+              ["auto", t("Automatic")],
+              ["history", t("History")],
+              ["live", t("Live")],
             ] as const
           ).map(([value, label]) => (
             <button key={value} aria-pressed={mode === value} onClick={() => setMode(value)}>
@@ -99,9 +99,9 @@ export function Plays({ live, onSettings }: { live: LiveState; onSettings: () =>
         <span className="muted" role="status">
           {mode === "auto"
             ? active
-              ? t("La partie est affichée automatiquement.")
-              : t("L’historique est affiché automatiquement.")
-            : t("Affichage manuel. Active Automatique pour suivre le jeu.")}
+              ? t("Gameplay is displayed automatically.")
+              : t("History is displayed automatically.")
+            : t("Manual display. Choose Automatic to follow the game.")}
         </span>
       </div>
       {view === "live" ? (
@@ -112,7 +112,7 @@ export function Plays({ live, onSettings }: { live: LiveState; onSettings: () =>
             <div className="error-box" role="alert">
               {result.error.message}
               <button className="secondary-button" onClick={() => void result.refetch()}>
-                {t("Réessayer")}
+                {t("Try again")}
               </button>
             </div>
           )}
@@ -122,7 +122,7 @@ export function Plays({ live, onSettings }: { live: LiveState; onSettings: () =>
               className="selected-play-panel"
               tabIndex={-1}
               role="group"
-              aria-label={t("Tentative enregistrée")}
+              aria-label={t("Recorded attempt")}
             >
               <SavedPlay
                 key={selected.id}
@@ -137,13 +137,13 @@ export function Plays({ live, onSettings }: { live: LiveState; onSettings: () =>
           )}
           <div className="section-title history-heading">
             <Activity size={18} />
-            <h2>{t("Historique")}</h2>
-            <span className="badge">{t("100 dernières tentatives")}</span>
+            <h2>{t("History")}</h2>
+            <span className="badge">{t("Latest 100 attempts")}</span>
           </div>
           {result.isPending ? (
             <p role="status" className="catalog-loading">
               <LoaderCircle size={18} className="spin" />
-              {t("Chargement des tentatives…")}
+              {t("Loading attempts…")}
             </p>
           ) : result.data?.length ? (
             <div className="plays-list">
@@ -169,8 +169,8 @@ export function Plays({ live, onSettings }: { live: LiveState; onSettings: () =>
                     <strong>{play.title}</strong>
                     <span>
                       {play.version} · {play.mods}
-                      {play.partial ? t(" · Capture partielle") : ""}
-                      {play.sourceConfirmed === false ? t(" · Mode non confirmé") : ""} ·{" "}
+                      {play.partial ? t(" · Partial capture") : ""}
+                      {play.sourceConfirmed === false ? t(" · Unconfirmed mode") : ""} ·{" "}
                       {new Date(play.startedAt).toLocaleString(locale())}
                     </span>
                   </div>
@@ -187,7 +187,7 @@ export function Plays({ live, onSettings }: { live: LiveState; onSettings: () =>
                   </div>
                   <div className="play-value">
                     <strong>{display(play.pp)}</strong>
-                    <span>{t("pp observés")}</span>
+                    <span>{t("observed pp")}</span>
                   </div>
                   <ChevronRight size={17} />
                 </button>
@@ -197,14 +197,14 @@ export function Plays({ live, onSettings }: { live: LiveState; onSettings: () =>
             !result.isError && (
               <div className="empty-panel large">
                 <Activity size={37} />
-                <h2>{t("Chaque tentative a quelque chose à raconter.")}</h2>
+                <h2>{t("Every attempt has a story to tell.")}</h2>
                 <p>
                   {t(
-                    "Lance tosu puis joue une map. Les résultats, fails et retries observés apparaîtront ici.",
+                    "Start tosu and play a map. Observed results, fails and retries will appear here.",
                   )}
                 </p>
                 <span className="badge">
-                  {t("Les replays restent visibles en direct sans créer de tentative")}
+                  {t("Replays remain visible live without creating an attempt")}
                 </span>
               </div>
             )
