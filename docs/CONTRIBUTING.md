@@ -72,6 +72,7 @@ Update `[Unreleased]` in `CHANGELOG.md`, commit the changes, then choose the wor
 ### Versioned PR
 
 example:
+
 ```sh
 npm version minor --no-git-tag-version
 git add package.json package-lock.json src-tauri/tauri.conf.json src-tauri/Cargo.toml src-tauri/Cargo.lock CHANGELOG.md

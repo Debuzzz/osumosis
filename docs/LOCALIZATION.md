@@ -2,7 +2,7 @@
 
 The frontend uses i18next/react-i18next. **English is the source, default and fallback language.** French is an optional translation. Settings saves the selected language under `osumosis.language` in browser/WebView local storage.
 
-*Missing, unsupported or inaccessible preferences use English by default*
+_Missing, unsupported or inaccessible preferences use English by default_
 
 ## Source and resources
 
