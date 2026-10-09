@@ -32,6 +32,8 @@ Les changements sont regroupés par version selon [Keep a Changelog](https://kee
 
 ### Fixed
 
+- Résolution canonique de la racine lazer avant le contrôle des fichiers, avec tests adaptés aux chemins temporaires Windows et couverture des alias/jonctions.
+
 - Fins de ligne LF imposées par Git et Prettier pour éviter les échecs massifs du contrôle de formatage après un checkout Windows.
 
 - Version affichée dans l’interface issue de package.json ; version desktop alignée sur la version npm.

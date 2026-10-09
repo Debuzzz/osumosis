@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { mkdtemp, readFile, readdir, rm } from "node:fs/promises";
+import { mkdtemp, readFile, readdir, realpath, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
@@ -13,7 +13,7 @@ test(
   { timeout: 30000 },
   async () => {
     const { default: Realm } = await import("realm");
-    const root = await mkdtemp(path.join(os.tmpdir(), "osumosis-realm-"));
+    const root = await realpath(await mkdtemp(path.join(os.tmpdir(), "osumosis-realm-")));
     let catalog: Catalog | undefined;
     try {
       const files = path.join(root, "files");

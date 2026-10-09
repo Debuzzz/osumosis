@@ -138,7 +138,9 @@ async function storedFile(root: string, hash: string) {
 export async function readLazerMap(map: LazerBeatmap, filesRoot: string): Promise<LazerMap> {
   const set = map.BeatmapSet;
   if (!set) throw new Error("Difficulté lazer sans set.");
-  const file = await storedFile(filesRoot, map.Hash),
+  // Compare canonical paths on both sides, including Windows short names and root aliases.
+  const root = await realpath(filesRoot);
+  const file = await storedFile(root, map.Hash),
     info = await stat(file);
   if (info.size > 16 * 1024 * 1024) throw new Error("Fichier .osu trop volumineux.");
   const bytes = await readFile(file);
@@ -146,7 +148,7 @@ export async function readLazerMap(map: LazerBeatmap, filesRoot: string): Promis
     throw new Error("Le contenu du fichier lazer ne correspond pas à son hash.");
   const checksum = createHash("md5").update(bytes).digest("hex");
   if (checksum !== map.MD5Hash.toLowerCase()) throw new Error("Checksum MD5 lazer incohérent.");
-  const virtualFolder = path.join(filesRoot, "__logical_set__");
+  const virtualFolder = path.join(root, "__logical_set__");
   const parsed = parseOsu(bytes.toString("utf8"), virtualFolder);
   const normalizeName = (name: string) => path.posix.normalize(name.replaceAll("\\", "/"));
   const names = new Map(
@@ -158,7 +160,7 @@ export async function readLazerMap(map: LazerBeatmap, filesRoot: string): Promis
     const hash = names.get(name);
     if (!hash) return { file: null, name: null };
     try {
-      return { file: await storedFile(filesRoot, hash), name };
+      return { file: await storedFile(root, hash), name };
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code === "ENOENT") return { file: null, name: null };
       throw error;
@@ -184,7 +186,7 @@ export async function readLazerMap(map: LazerBeatmap, filesRoot: string): Promis
       background: background.file,
     },
     file,
-    root: filesRoot,
+    root,
     audioName: audio.name,
     backgroundName: background.name,
     setKey: set.OnlineID > 0 ? `set:${set.OnlineID}` : `lazer:${String(set.ID)}`,

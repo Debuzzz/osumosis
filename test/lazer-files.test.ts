@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, rm, symlink, utimes, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, realpath, rm, symlink, utimes, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
@@ -11,7 +11,7 @@ import {
 import { beatmap, md5, storeLazerFile } from "./fixtures";
 
 test("lazer resolves maps and media through hashed files and named set references", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "osumosis-lazer-files-"));
+  const root = await realpath(await mkdtemp(path.join(os.tmpdir(), "osumosis-lazer-files-")));
   try {
     const [map, audio, background] = await Promise.all([
       storeLazerFile(root, beatmap),
@@ -54,8 +54,41 @@ test("lazer resolves maps and media through hashed files and named set reference
   }
 });
 
+test("lazer accepts a storage root alias and returns canonical map and media paths", async () => {
+  const root = await realpath(await mkdtemp(path.join(os.tmpdir(), "osumosis-lazer-alias-")));
+  try {
+    const files = path.join(root, "files"),
+      alias = path.join(root, "alias");
+    const [map, audio] = await Promise.all([
+      storeLazerFile(files, beatmap),
+      storeLazerFile(files, "audio fixture"),
+    ]);
+    await symlink(files, alias, process.platform === "win32" ? "junction" : "dir");
+    const entry: LazerBeatmap = {
+      Hash: map.hash,
+      MD5Hash: md5(beatmap),
+      OnlineID: 123,
+      StarRating: 4.5,
+      Status: 1,
+      BeatmapSet: {
+        ID: "set-id",
+        OnlineID: 456,
+        DeletePending: false,
+        Files: [{ Filename: "media/song.ogg", File: { Hash: audio.hash } }],
+      },
+    };
+    const result = await readLazerMap(entry, alias);
+    assert.equal(result.root, await realpath(files));
+    assert.equal(result.file, await realpath(map.file));
+    assert.equal(result.parsed.audio, await realpath(audio.file));
+    assert.equal(result.audioName, "media/song.ogg");
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test("symlinks cannot expose a map outside the lazer storage", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "osumosis-lazer-boundary-"));
+  const root = await realpath(await mkdtemp(path.join(os.tmpdir(), "osumosis-lazer-boundary-")));
   try {
     const files = path.join(root, "files");
     await mkdir(files);
