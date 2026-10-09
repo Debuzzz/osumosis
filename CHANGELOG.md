@@ -4,6 +4,8 @@ Changes are grouped by version following [Keep a Changelog](https://keepachangel
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-09
+
 ### Added
 
 - Project agent instructions and an osu!mosis development skill covering architecture, local-first behavior, localization, validation and versioned PRs.
