@@ -2,6 +2,32 @@
 
 Use a current Node.js LTS release (22.13+ for the development tools) and npm. `npm ci` installs dependencies and the Husky Git hooks. Commands work in Git Bash and Git for Windows without PowerShell scripts.
 
+## AI-assisted and vibe-coded contributions
+
+**AI-assisted and vibe-coded PRs are welcome.** The same quality expectations apply to every contribution, regardless of which tools helped write it. You are responsible for understanding, reviewing and validating the code you submit.
+
+A reviewable PR should:
+
+- Solve a clear problem with a focused change and an explanation of the resulting behavior.
+- Follow the feature architecture, local-first constraints and conventions described below and in [AGENTS.md](../AGENTS.md).
+- Include relevant verification and pass `npm run verify`; add regression coverage when fixing a meaningful behavior failure.
+- Keep the diff understandable, with purposeful dependencies and abstractions and accurate documentation.
+- Describe what you checked and any remaining uncertainty. Remove generated filler, unrelated rewrites and claims about tests you did not run.
+
+Review the complete diff before submitting it. A generated patch needs the same care as handwritten code; a large code dump without a clear purpose or validation is difficult to review and may be closed or sent back for revision.
+
+### Start with an issue when exploring an idea
+
+For a suggestion, an uncertain design or a broad architecture change, [open an issue](https://github.com/Debuzzz/osumosis/issues/new) first. Check existing issues and the [roadmap](../ROADMAP.md), then describe the problem, an example of the desired behavior and any constraints. AI brainstorming is useful for refining that proposal; the issue should contain a concise, reviewed summary.
+
+For a bug report, include reproduction steps, the expected/actual behavior and relevant versions or redacted diagnostics. Keep OAuth secrets, tokens, private paths and complete personal telemetry out of public reports. Once the scope is clear, a focused PR is welcome.
+
+## Repository presentation
+
+The README banner also serves as the repository's social preview. Keep [assets/social-preview.png](../assets/social-preview.png) at **1280 × 640 pixels**, with readable text and safe margins for thumbnails.
+
+To apply it on GitHub, download the PNG, then open **Settings → General → Social preview → Edit → Upload an image** in the repository. Committing the file updates the README; the social preview requires this separate repository-settings upload. Access to repository settings is required.
+
 ## Find the right file
 
 - Views: `src/features/<feature>/`; shared visuals: `src/components/`.

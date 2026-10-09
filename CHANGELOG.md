@@ -4,6 +4,15 @@ Changes are grouped by version following [Keep a Changelog](https://keepachangel
 
 ## [Unreleased]
 
+### Changed
+
+- Branded README with a social preview banner, project badges and quick links.
+- Contribution guidance explicitly welcomes reviewed and verified AI-assisted/vibe-coded PRs, with issues for ideas that need discussion first.
+
+### Added
+
+- Repository social preview artwork and instructions for uploading it on GitHub.
+
 ## [0.4.0] - 2026-10-09
 
 ### Added
