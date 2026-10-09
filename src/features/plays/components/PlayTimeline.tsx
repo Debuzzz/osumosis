@@ -74,12 +74,12 @@ export function PlayTimeline({
         ]
       : [
           {
-            name: t("PP observés"),
+            name: t("Observed PP"),
             color: "#deb0e9",
             points: data.map((point) => ({ x: point.time, y: point.pp })),
           },
           {
-            name: t("PP si FC"),
+            name: t("PP if FC"),
             color: "#79c9bf",
             points: data
               .filter((point) => point.fcPp !== undefined)
@@ -87,13 +87,13 @@ export function PlayTimeline({
           },
         ].filter((series) => series.points.length);
   return (
-    <section className="play-timeline" aria-label={t("Chronologie de la performance")}>
+    <section className="play-timeline" aria-label={t("Performance timeline")}>
       <div className="play-timeline-grid">
         <section className="live-panel timeline-chart">
           <div className="section-title">
             <Activity size={17} />
-            <h2>{t("Chronologie")}</h2>
-            <div className="timeline-metric" role="group" aria-label={t("Mesure du graphe")}>
+            <h2>{t("Timeline")}</h2>
+            <div className="timeline-metric" role="group" aria-label={t("Chart metric")}>
               <button aria-pressed={metric === "accuracy"} onClick={() => setMetric("accuracy")}>
                 {t("Accuracy")}
               </button>
@@ -105,8 +105,8 @@ export function PlayTimeline({
           <Chart
             label={
               metric === "accuracy"
-                ? t("Accuracy pendant le play")
-                : t("Évolution des PP observés et estimés FC")
+                ? t("Accuracy during gameplay")
+                : t("Observed and estimated FC PP over time")
             }
             series={series}
             markers={groups.map((group) => ({
@@ -118,25 +118,23 @@ export function PlayTimeline({
         <section className="live-panel timeline-errors">
           <div className="section-title">
             <List size={17} />
-            <h2>{t("Erreurs observées")}</h2>
-            <span className="badge">{t("{{count}} secondes", { count: groups.length })}</span>
+            <h2>{t("Observed errors")}</h2>
+            <span className="badge">{t("{{count}} seconds", { count: groups.length })}</span>
           </div>
           {!errorsAvailable ? (
-            <p className="muted">
-              {t("Les événements d’erreur ne sont pas disponibles pour cette lecture replay.")}
-            </p>
+            <p className="muted">{t("Error events are unavailable for this replay playback.")}</p>
           ) : groups.length ? (
             <div
               className="timeline-error-list"
               tabIndex={0}
-              aria-label={t("Erreurs regroupées par seconde")}
+              aria-label={t("Errors grouped by second")}
             >
               <table>
-                <caption className="sr-only">{t("Erreurs regroupées par seconde")}</caption>
+                <caption className="sr-only">{t("Errors grouped by second")}</caption>
                 <thead>
                   <tr>
-                    <th scope="col">{t("Temps")}</th>
-                    <th scope="col">{t("Erreurs")}</th>
+                    <th scope="col">{t("Time")}</th>
+                    <th scope="col">{t("Errors")}</th>
                     <th scope="col">{t("Accuracy")}</th>
                     <th scope="col">PP</th>
                   </tr>
@@ -158,14 +156,14 @@ export function PlayTimeline({
           ) : (
             <div className="timeline-no-errors">
               <Check size={24} />
-              <p>{t("Aucune erreur observée dans cette capture.")}</p>
+              <p>{t("No errors observed in this capture.")}</p>
             </div>
           )}
         </section>
       </div>
       <p className="timeline-note">
         {t(
-          "Les erreurs d’une même seconde sont regroupées. Leur position vient de la télémétrie ; l’objet exact nécessite l’analyse du replay.",
+          "Errors within the same second are grouped. Their position comes from telemetry; identifying the exact object requires replay analysis.",
         )}
       </p>
     </section>

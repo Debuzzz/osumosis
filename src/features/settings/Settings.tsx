@@ -57,11 +57,7 @@ export function Settings({
       await api("/api/settings", form, "PUT");
       onSaved();
       await client.invalidateQueries();
-      notify(
-        t(
-          "Réglages enregistrés. Après un changement de profil ou de dossiers, indexe la bibliothèque sélectionnée.",
-        ),
-      );
+      notify(t("Settings saved. After changing profiles or folders, index the selected library."));
     } catch (error) {
       notify((error as Error).message);
     } finally {
@@ -83,10 +79,10 @@ export function Settings({
             <span /> {t("KEEP IT CLOSE")}
           </div>
           <h1>
-            {t("À ta façon")}
+            {t("Your way")}
             <span>.</span>
           </h1>
-          <p>{t("Choisis ton client osu! et configure sa bibliothèque locale.")}</p>
+          <p>{t("Choose your osu! client and configure its local library.")}</p>
         </div>
       </div>
       {query.isError && <div className="error-box">{query.error.message}</div>}
@@ -110,7 +106,7 @@ export function Settings({
           <div className="settings-actions">
             <button type="submit" className="primary-button" disabled={busy}>
               {busy ? <LoaderCircle className="spin" size={16} /> : <Check size={16} />}
-              {t("Enregistrer les réglages")}
+              {t("Save settings")}
             </button>
             <button
               type="button"
@@ -119,7 +115,7 @@ export function Settings({
               onClick={onIndex}
             >
               <RefreshCw size={16} />
-              {t("Indexer le profil enregistré")}
+              {t("Index saved profile")}
             </button>
           </div>
         </form>

@@ -52,46 +52,46 @@ export function Recommendations({
             <span /> {t("A LITTLE DIRECTION")}
           </div>
           <h1>
-            {t("Une sélection pour toi")}
+            {t("A selection for you")}
             <span>.</span>
           </h1>
-          <p>{t("Cinq maps, une difficulté cible, de nouvelles possibilités.")}</p>
+          <p>{t("Five maps, a target difficulty, new possibilities.")}</p>
         </div>
         <Sparkles className="heading-icon" size={42} />
       </div>
       <div className="recommend-panel">
         <div className="section-title">
           <Target size={18} />
-          <h2>{t("Préparer ta sélection")}</h2>
-          <span className="badge">{t("Moteur initial")}</span>
+          <h2>{t("Prepare your selection")}</h2>
+          <span className="badge">{t("Initial engine")}</span>
         </div>
         <div className="recommendation-search">
           <label>
-            {t("Recherche et métadonnées")}
+            {t("Search and metadata")}
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder={t("Artiste, titre, tags, mapper…")}
+              placeholder={t("Artist, title, tags, mapper…")}
             />
           </label>
           <MetadataFilters query={query} onChange={setQuery} />
         </div>
         <div className="form-grid">
           <label>
-            {t("Objectif")}
+            {t("Objective")}
             <select value={objective} onChange={(e) => setObjective(e.target.value)}>
               <option value="farm">{t("Farm")}</option>
-              <option value="improve">{t("Rejouer et améliorer")}</option>
-              <option value="discovery">{t("Découverte")}</option>
-              <option value="training">{t("Entraînement")}</option>
+              <option value="improve">{t("Replay and improve")}</option>
+              <option value="discovery">{t("Discovery")}</option>
+              <option value="training">{t("Training")}</option>
             </select>
           </label>
           <label>
             {t("Source")}
             <select value={source} onChange={(e) => setSource(e.target.value as Source)}>
-              <option value="local">{t("Installées uniquement")}</option>
-              <option value="cached">{t("Catalogue en cache")}</option>
-              <option value="new">{t("Non installées + découverte")}</option>
+              <option value="local">{t("Installed only")}</option>
+              <option value="cached">{t("Cached catalog")}</option>
+              <option value="new">{t("Not installed + discovery")}</option>
             </select>
           </label>
           <label>
@@ -107,7 +107,7 @@ export function Recommendations({
         </div>
         <div className="target-slider">
           <label>
-            {t("Difficulté cible")}{" "}
+            {t("Target difficulty")}{" "}
             <strong>
               {target.toFixed(1)} <Star size={14} fill="currentColor" />
             </strong>
@@ -128,12 +128,12 @@ export function Recommendations({
         <div className="recommend-bottom">
           <p>
             {t(
-              "La sélection actuelle utilise les étoiles NM, l’historique connu et la diversité des sets. La modélisation du profil et des gains de PP est prévue ensuite.",
+              "The current selection uses NM stars, known history and set diversity. Player profiles and PP gains are planned next.",
             )}
           </p>
           <button className="primary-button" onClick={() => void suggest()} disabled={busy}>
             {busy ? <LoaderCircle size={16} className="spin" /> : <Sparkles size={16} />}
-            {t("Recommander 5 maps")}
+            {t("Recommend 5 maps")}
           </button>
         </div>
       </div>
@@ -142,7 +142,7 @@ export function Recommendations({
           <div className="results-toolbar">
             <div>
               <strong>{result.maps.length}</strong> {t("suggestions")}{" "}
-              <span className="muted">{t("· cinq sets maximum")}</span>
+              <span className="muted">{t("· up to five sets")}</span>
             </div>
           </div>
           {result.maps.length ? (
@@ -154,10 +154,10 @@ export function Recommendations({
           ) : (
             <div className="empty-panel">
               <Target size={30} />
-              <h2>{t("Pas assez de difficultés connues.")}</h2>
+              <h2>{t("Not enough known difficulties.")}</h2>
               <p>
                 {t(
-                  "Indexe la bibliothèque ou élargis la difficulté cible. Ouvrir une map puis calculer son analyse renseigne ses étoiles si elles sont absentes.",
+                  "Index your library or widen the target difficulty. Opening a map and calculating its analysis fills in missing star ratings.",
                 )}
               </p>
             </div>
@@ -167,18 +167,18 @@ export function Recommendations({
         <div className="recommend-intro">
           <div>
             <span>01</span>
-            <h3>{t("Une cible claire")}</h3>
-            <p>{t("Les contraintes réduisent le catalogue aux maps pertinentes.")}</p>
+            <h3>{t("A clear target")}</h3>
+            <p>{t("Filters narrow the catalog down to relevant maps.")}</p>
           </div>
           <div>
             <span>02</span>
-            <h3>{t("Un peu de variété")}</h3>
-            <p>{t("Un seul résultat par set pour explorer plusieurs morceaux.")}</p>
+            <h3>{t("A little variety")}</h3>
+            <p>{t("One result per set to explore different songs.")}</p>
           </div>
           <div>
             <span>03</span>
-            <h3>{t("Une raison visible")}</h3>
-            <p>{t("Chaque proposition indique les critères de sa sélection.")}</p>
+            <h3>{t("A visible reason")}</h3>
+            <p>{t("Each suggestion explains why it was selected.")}</p>
           </div>
         </div>
       )}

@@ -38,7 +38,7 @@ export function MapDetail({
     <dialog
       ref={drawer}
       className="drawer-backdrop drawer-dialog"
-      aria-label={t("Détails de {{title}}", { title: m.title })}
+      aria-label={t("Details for {{title}}", { title: m.title })}
       onCancel={(event) => {
         event.preventDefault();
         onClose();
@@ -46,7 +46,7 @@ export function MapDetail({
       onClick={onClose}
     >
       <aside className="map-drawer" onClick={(e) => e.stopPropagation()}>
-        <button className="drawer-close icon-button" onClick={onClose} aria-label={t("Fermer")}>
+        <button className="drawer-close icon-button" onClick={onClose} aria-label={t("Close")}>
           <X size={20} />
         </button>
         <div className="drawer-cover">
@@ -59,13 +59,13 @@ export function MapDetail({
         <div className="drawer-content">
           <div className="drawer-byline">
             {t("mapped by")} <strong>{m.creator}</strong>
-            <span>{m.local ? t("Installée") : t("Métadonnées en cache")}</span>
+            <span>{m.local ? t("Installed") : t("Cached metadata")}</span>
           </div>
           <div className="drawer-actions">
             {m.beatmapId && (
               <a className="primary-button small" href={`osu://b/${m.beatmapId}`}>
                 <PlayIcon size={14} />
-                {t("Ouvrir dans osu!")}
+                {t("Open in osu!")}
               </a>
             )}
             {m.setId && (
@@ -76,7 +76,7 @@ export function MapDetail({
                 rel="noreferrer"
               >
                 <ExternalLink size={14} />
-                {t("Page officielle")}
+                {t("Official page")}
               </a>
             )}
             {!m.local && m.setId && (
@@ -87,12 +87,12 @@ export function MapDetail({
                 rel="noreferrer"
               >
                 <Download size={14} />
-                {t("Télécharger sur osu!")}
+                {t("Download on osu!")}
               </a>
             )}
           </div>
           <div className="drawer-section">
-            <h3>{t("Difficultés du set")}</h3>
+            <h3>{t("Set difficulties")}</h3>
             <div className="difficulty-buttons">
               {(detail.data?.difficulties || [m]).map((d) => (
                 <button
@@ -110,10 +110,10 @@ export function MapDetail({
           </div>
           <div className="map-facts">
             {[
-              [t("Étoiles NM"), m.stars?.toFixed(2) || "—"],
+              [t("NM stars"), m.stars?.toFixed(2) || "—"],
               ["BPM", m.bpm?.toFixed(0) || "—"],
-              [t("Durée indicative"), formatTime(m.length)],
-              [t("Objets"), String(m.objects)],
+              [t("Approximate length"), formatTime(m.length)],
+              [t("Objects"), String(m.objects)],
               ["AR", String(m.ar)],
               ["OD", String(m.od)],
               ["CS", String(m.cs)],
@@ -127,7 +127,7 @@ export function MapDetail({
           </div>
           {m.local && (
             <div className="drawer-section">
-              <h3>{t("Audio local")}</h3>
+              <h3>{t("Local audio")}</h3>
               <audio
                 ref={audio}
                 controls
@@ -155,17 +155,17 @@ export function MapDetail({
           )}
           <MapAnalysis key={m.key} map={m} />
           <div className="drawer-section map-metadata">
-            <h3>{t("Métadonnées")}</h3>
+            <h3>{t("Metadata")}</h3>
             <dl>
-              <dt>{t("Source du morceau")}</dt>
+              <dt>{t("Song source")}</dt>
               <dd>{m.source || "—"}</dd>
-              <dt>{t("Tags de la map")}</dt>
+              <dt>{t("Map tags")}</dt>
               <dd>{m.tags || "—"}</dd>
             </dl>
           </div>
           <div className="drawer-section">
             <h3>
-              {t("Tentatives observées")}{" "}
+              {t("Observed attempts")}{" "}
               <span className="muted">({detail.data?.plays.length || 0})</span>
             </h3>
             {detail.data?.plays.length ? (
@@ -180,9 +180,7 @@ export function MapDetail({
                 </div>
               ))
             ) : (
-              <p className="muted">
-                {t("Aucune tentative enregistrée pour cette version de la map.")}
-              </p>
+              <p className="muted">{t("No recorded attempts for this map version.")}</p>
             )}
           </div>
           <div className="checksum">

@@ -1,55 +1,51 @@
 # Changelog
 
-Les changements sont regroupés par version selon [Keep a Changelog](https://keepachangelog.com/), avec des versions [SemVer](https://semver.org/).
+Changes are grouped by version following [Keep a Changelog](https://keepachangelog.com/), using [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
 ### Added
 
-- Commande de release interactive patch/minor/major, synchronisation des versions npm/Tauri, notes datées et contrôle des versions avant commit/push et build desktop.
-
-- Hooks Git de commit/push et CI de qualité Windows/Linux, avec lint strict, formatage, types, architecture, tests et build.
-
-- Vue commune Tes plays/direct, basculement automatique et sélection manuelle de l’historique.
-- Widgets de score partagés avec les tentatives sauvegardées, snapshot des nouvelles captures et PP FC dans la chronologie.
-- Filtres visibles de tags, source du morceau, mapper et difficulté dans la bibliothèque et les recommandations.
-
-- Configuration Tauri 2 : fenêtre desktop et backend Node local embarqué, données dans le dossier de l’application.
-- Liaison OAuth osu! avec autorisation dans le navigateur, profil public en cache, actualisation et déconnexion.
-- Traductions français/anglais, préférence de langue par appareil et documentation pour ajouter une langue.
-- Notes de version accessibles dans l’application.
-- Workflow de builds Windows/macOS/Linux et création d’une release GitHub en brouillon sur les tags `v*`.
+- Project agent instructions and an osu!mosis development skill covering architecture, local-first behavior, localization, validation and versioned PRs.
+- Detailed user guide linked from the concise README, plus localization regression checks.
+- Interactive patch/minor/major release command, synchronized npm/Tauri versions, dated notes and version checks before commit/push and desktop builds.
+- Commit/push Git hooks and Windows/Linux quality CI with strict lint, formatting, types, architecture, tests and builds.
+- Combined plays/live view with automatic switching and manual history selection.
+- Shared score widgets for saved attempts, snapshots for new captures and FC PP in the timeline.
+- Visible tag, song-source, mapper and difficulty filters in the library and recommendations.
+- Tauri 2 desktop window with an embedded local Node backend and application-directory storage.
+- osu! OAuth authorization in the browser, cached public profile, refresh and disconnect.
+- English/French translations, per-device language preference and documentation for adding languages.
+- In-app release notes.
+- Windows/macOS/Linux build workflow and draft GitHub releases on `v*` tags.
 
 ### Changed
 
-- Architecture organisée par fonctionnalités : routes/services/repositories backend, vues et composants frontend, App conservé comme composition globale.
-- Contrat RPC du catalogue typé, séparation transport/normalisation/capture tosu et styles répartis en fichiers.
-
-- Chronologie et erreurs côte à côte, score dessous ; regroupement des misses/sliderbreaks par seconde.
-
-- Les Réglages restent dans la navigation latérale ; l’avatar devient l’accès au compte osu!.
-- Navigation adaptée aux petites fenêtres, dialogues avec gestion native du focus et amélioration du clavier/mouvement réduit.
+- English is the UI source/default/fallback language. Translation keys use English, while saved French preferences remain supported.
+- English documentation, roadmap and changelog; a shorter README links to detailed setup and feature guides.
+- Feature-based architecture: backend routes/services/repositories, frontend views/components, and App retained as global composition.
+- Typed catalogue RPC contract, separate tosu transport/normalization/capture and split stylesheets.
+- Side-by-side timeline and errors with the score below; misses/sliderbreaks grouped by second.
+- Settings remain in the sidebar; the avatar opens the osu! account panel.
+- Small-window navigation, native dialog focus handling, keyboard and reduced-motion improvements.
 
 ### Fixed
 
-- Résolution canonique de la racine lazer avant le contrôle des fichiers, avec tests adaptés aux chemins temporaires Windows et couverture des alias/jonctions.
-
-- Fins de ligne LF imposées par Git et Prettier pour éviter les échecs massifs du contrôle de formatage après un checkout Windows.
-
-- Version affichée dans l’interface issue de package.json ; version desktop alignée sur la version npm.
-
-- Lecture lazer avec le nom persisté `File` du modèle Realm.
-- Capture des plays : statut partie/replay dédié, récupération du résultat et synchronisation du départ évitant les retries fantômes.
+- Canonical lazer-root resolution before filesystem checks, with Windows temporary-path tests and alias/junction coverage.
+- LF endings enforced by Git and Prettier to prevent widespread formatting failures after Windows checkouts.
+- UI version read from package.json; desktop version aligned with npm.
+- Lazer reading uses the persisted Realm model name `File`.
+- Play capture uses dedicated gameplay/replay status, result settling and start synchronization to avoid phantom retries.
 
 ## [0.1.0]
 
 ### Added
 
-- Compagnon local React/TypeScript/Vite et backend Node/Fastify.
-- Index SQLite, bibliothèque stable, recherche, collections et calculs locaux.
-- Profils stable/lazer et lecture Realm sur copie.
-- Découverte osu! en cache avec budget 5/minute, recommandations initiales et chargement au scroll.
-- Capture tosu, diagnostic local et dashboard En direct.
+- Local React/TypeScript/Vite companion with a Node/Fastify backend.
+- SQLite index, stable library, search, collections and local calculations.
+- Stable/lazer profiles and Realm snapshot reading.
+- Cached osu! discovery with a five-searches-per-minute budget, initial recommendations and scroll loading.
+- tosu capture, local diagnostics and live dashboard.
 
 [Unreleased]: https://github.com/Debuzzz/osumosis/compare/main...HEAD
 [0.1.0]: https://github.com/Debuzzz/osumosis

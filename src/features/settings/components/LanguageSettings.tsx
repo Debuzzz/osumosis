@@ -4,9 +4,9 @@ export function LanguageSettings() {
   const { i18n } = useTranslation();
   return (
     <section className="settings-section">
-      <h2>{t("Langue et affichage")}</h2>
+      <h2>{t("Language and display")}</h2>
       <label>
-        {t("Langue de l’interface")}
+        {t("Interface language")}
         <select value={i18n.language} onChange={(event) => void setLanguage(event.target.value)}>
           {languages.map((language) => (
             <option key={language.code} value={language.code}>
@@ -17,7 +17,7 @@ export function LanguageSettings() {
       </label>
       <p>
         {t(
-          "Le choix est enregistré sur cet appareil. Les traductions peuvent être étendues sans modifier les composants.",
+          "Your choice is saved on this device. Translations can be extended without changing components.",
         )}
       </p>
     </section>

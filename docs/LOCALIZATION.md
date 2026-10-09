@@ -1,21 +1,32 @@
-# Localisation
+# Localization
 
-Le frontend utilise i18next/react-i18next. La langue est choisie dans les Réglages et conservée dans le stockage de la WebView/du navigateur. `document.documentElement.lang` suit la langue ; les nombres et dates utilisent `locale()`.
+The frontend uses i18next/react-i18next. **English is the source, default and fallback language.** French is an optional translation. Settings saves the selected language under `osumosis.language` in browser/WebView local storage; an existing French preference is preserved. Missing, unsupported or inaccessible preferences use English.
 
-- `src/lib/i18n.ts` : langues disponibles, ressources et préférence.
-- `src/locales/fr.json` : textes français et fallback.
-- `src/locales/en.json` : traductions anglaises.
-- Les clés correspondent actuellement au texte source, avec `keySeparator: false`.
-- `t('Compte osu! : {{name}}', { name })` gère l’interpolation ; conserver les placeholders dans toutes les traductions.
-- Les noms de maps, tags, collections, mods, noms de joueur et la syntaxe de recherche ne se traduisent pas.
-- Les erreurs techniques et les logs backend restent des diagnostics ; certaines erreurs spécifiques du serveur peuvent encore apparaître dans leur langue source.
+## Source and resources
 
-## Ajouter une langue
+- `src/lib/i18n.ts`: resources, available languages, regional formatting and preference handling.
+- `src/locales/en.json`: canonical English source strings.
+- `src/locales/fr.json`: French values using the same English keys.
+- `index.html`: starts with `lang="en"`; `document.documentElement.lang` follows the selected language.
+- `locale()` supplies the regional locale for numbers and dates; each language declares its own locale.
 
-1. Copier `fr.json` vers le code de langue souhaité, puis traduire les valeurs en gardant toutes les clés et placeholders.
-2. Importer la ressource dans `src/lib/i18n.ts`, l’ajouter à `resources` et à `languages` avec son nom natif.
-3. Adapter `locale()` au code régional de cette langue.
-4. Utiliser `t()` dans les nouveaux composants. Les composants autonomes peuvent appeler `useTranslation()` pour suivre les changements de langue.
-5. Vérifier les libellés longs, les petites fenêtres, le clavier et les textes alternatifs lors des essais de l’interface.
+Keys use the English text, with `keySeparator: false` and `nsSeparator: false`. Add source strings to English first, then translate their values in other resources:
 
-La direction RTL reste à ajouter avant de proposer une langue qui l’utilise.
+```tsx
+t("osu! account: {{name}}", { name });
+t("{{count}} seconds", { count });
+```
+
+Keep interpolation names unchanged in every language. Plurals use i18next suffixes such as `_one` and `_other`: `{{count}} seconds_one` contains `{{count}} second` in English and `{{count}} seconde` in French. A missing translation falls back to English. Use separate English keys when the French wording depends on context, such as the **Installed maps** tab and an **Installed** badge.
+
+Map titles, tags, collections, mods, player names and search syntax are user/game data and are not translated. Backend diagnostics are technical messages rather than a fully localized error-code API; some specific messages may still appear in their original language. Structured backend error localization and RTL support remain roadmap work.
+
+## Add a language
+
+1. Copy `en.json` to the new language code and translate the values, keeping all keys and placeholders. Add the plural forms required by that language.
+2. Import the resource in `src/lib/i18n.ts` and register it in `resources` and `languages`, with its native display name and regional locale.
+3. Use English `t()` keys in new UI code. Independent components can call `useTranslation()` to subscribe to language changes.
+4. Run `npm run verify`; localization checks cover preference handling, fallback and English/French resource keys/placeholders. Extend the resource checks to the new language and its plural forms.
+5. Check long labels, narrow windows, keyboard navigation, accessible names and formatted numbers/dates in the real UI.
+
+Do not replace the user's saved language when updating the default or adding a new translation. English remains the reference resource.

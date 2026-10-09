@@ -4,19 +4,20 @@ import en from "../locales/en.json";
 import fr from "../locales/fr.json";
 
 export const languages = [
-  { code: "fr", name: "Français" },
-  { code: "en", name: "English" },
+  { code: "en", name: "English", locale: "en-US" },
+  { code: "fr", name: "Français", locale: "fr-FR" },
 ] as const;
-let saved = "fr";
+export const defaultLanguage = "en";
+let saved: string = defaultLanguage;
 try {
-  saved = localStorage.getItem("osumosis.language") || "fr";
+  saved = localStorage.getItem("osumosis.language") || defaultLanguage;
 } catch {
   /* Storage can be unavailable. */
 }
 void i18next.use(initReactI18next).init({
-  resources: { fr: { translation: fr }, en: { translation: en } },
-  lng: languages.some((language) => language.code === saved) ? saved : "fr",
-  fallbackLng: "fr",
+  resources: { en: { translation: en }, fr: { translation: fr } },
+  lng: languages.some((language) => language.code === saved) ? saved : defaultLanguage,
+  fallbackLng: defaultLanguage,
   keySeparator: false,
   nsSeparator: false,
   interpolation: { escapeValue: false },
@@ -24,7 +25,8 @@ void i18next.use(initReactI18next).init({
 });
 export const t = (key: string, values?: Record<string, unknown>) =>
   i18next.t(key, values) as string;
-export const locale = () => (i18next.language === "en" ? "en-US" : "fr-FR");
+export const locale = () =>
+  languages.find((language) => language.code === i18next.resolvedLanguage)?.locale ?? "en-US";
 export async function setLanguage(language: string) {
   if (!languages.some((item) => item.code === language)) return;
   await i18next.changeLanguage(language);

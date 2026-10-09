@@ -27,7 +27,7 @@ export function Topbar({
       <button
         ref={menuTrigger}
         className="mobile-menu icon-button"
-        aria-label={t("Ouvrir la navigation")}
+        aria-label={t("Open navigation")}
         aria-expanded={navigationOpen}
         aria-controls="main-navigation"
         onClick={onNavigation}
@@ -35,13 +35,13 @@ export function Topbar({
         <Menu size={20} />
       </button>
       <div className="breadcrumb">
-        {t("TON ESPACE")} <ChevronRight size={13} />
-        <span>{page === "settings" ? t("Réglages") : nav.find((n) => n.id === page)?.title}</span>
+        {t("YOUR SPACE")} <ChevronRight size={13} />
+        <span>{page === "settings" ? t("Settings") : nav.find((n) => n.id === page)?.title}</span>
       </div>
       <div className="topbar-actions">
         <span className={`status-pill ${live.connected ? "connected" : ""}`}>
           {live.connected ? <Wifi size={13} /> : <WifiOff size={13} />}
-          {live.connected ? t("tosu connecté") : t("tosu hors ligne")}
+          {live.connected ? t("tosu connected") : t("tosu offline")}
         </span>
         <Account onSettings={onSettings} notify={(message) => notify(t(message))} />
       </div>

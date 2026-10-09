@@ -6,11 +6,11 @@ export function PreferencesSettings({ form, field }: { form: SettingsForm; field
     <section className="settings-section">
       <div className="section-title">
         <Target size={19} />
-        <h2>{t("Préférences de départ")}</h2>
+        <h2>{t("Initial preferences")}</h2>
       </div>
       <div className="form-grid">
         <label>
-          {t("Difficulté cible")}
+          {t("Target difficulty")}
           <input
             type="number"
             min="0"
@@ -21,7 +21,7 @@ export function PreferencesSettings({ form, field }: { form: SettingsForm; field
           />
         </label>
         <label>
-          {t("Mods du simulateur")}
+          {t("Simulation mods")}
           <select
             value={form.preferredMods}
             onChange={(event) => field("preferredMods", event.target.value)}
@@ -33,7 +33,7 @@ export function PreferencesSettings({ form, field }: { form: SettingsForm; field
         </label>
       </div>
       <p>
-        {t("Les simulations utilisent les règles du profil sélectionné : osu!")}
+        {t("Simulations use the selected profile's rules: osu!")}
         {form.client}.
       </p>
     </section>

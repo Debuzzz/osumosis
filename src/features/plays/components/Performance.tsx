@@ -32,7 +32,7 @@ export function Performance({
       : undefined;
   return (
     <div className="performance-summary">
-      <section className="live-stage" aria-label={t("Résumé du score")}>
+      <section className="live-stage" aria-label={t("Score summary")}>
         {map?.checksum && (
           <Background key={map.checksum} checksum={map.checksum} live={!recorded} />
         )}
@@ -41,11 +41,11 @@ export function Performance({
           <div className="live-track">
             <div className="eyebrow">
               {client.toUpperCase()} · {play?.mods || "NM"} ·{" "}
-              {recorded ? t("Tentative enregistrée") : t("En direct")}
+              {recorded ? t("Recorded attempt") : t("Live")}
             </div>
-            <h2>{map?.title || t("Sélectionne une map dans le jeu")}</h2>
+            <h2>{map?.title || t("Select a map in the game")}</h2>
             <p>
-              {map?.artist || t("Ta prochaine map t’attend")}
+              {map?.artist || t("Your next map awaits")}
               {map?.version ? ` · ${map.version}` : ""}
             </p>
             {map?.mapper && (
@@ -75,10 +75,10 @@ export function Performance({
               <strong>{display(play?.pp)}</strong>
               <span>pp</span>
             </div>
-            <small>{t("observés par tosu")}</small>
+            <small>{t("observed by tosu")}</small>
             <div className="live-pp-target">
               <Target size={13} />
-              {display(play?.fcPp)} {t("pp si FC")}
+              {display(play?.fcPp)} {t("pp if FC")}
             </div>
           </div>
         </div>
@@ -87,7 +87,7 @@ export function Performance({
             <div
               className="live-stage-progress"
               role="progressbar"
-              aria-label={t("Progression de la map")}
+              aria-label={t("Map progress")}
               aria-valuemin={0}
               aria-valuemax={100}
               aria-valuenow={Math.round(progress)}
@@ -101,7 +101,7 @@ export function Performance({
           </>
         )}
       </section>
-      <section className="live-score-strip" aria-label={t("Compteurs de performance")}>
+      <section className="live-score-strip" aria-label={t("Performance counters")}>
         <div className="live-accuracy">
           <span>{t("Accuracy")}</span>
           <strong>
@@ -140,7 +140,7 @@ export function Performance({
           <strong>{display(play?.sliderBreaks)}</strong>
         </div>
       </section>
-      <section className="live-panel performance-reference" aria-label={t("Repères")}>
+      <section className="live-panel performance-reference" aria-label={t("Benchmarks")}>
         <div className="live-secondary-stats">
           <div>
             <span>{t("Unstable rate")}</span>
@@ -153,7 +153,7 @@ export function Performance({
         </div>
         {ppScenarios?.length ? (
           <div>
-            <h3>{t("Scénarios de PP transmis par tosu")}</h3>
+            <h3>{t("PP scenarios provided by tosu")}</h3>
             <div className="live-scenarios">
               {ppScenarios.map((scenario) => (
                 <div key={scenario.accuracy}>
@@ -169,8 +169,8 @@ export function Performance({
         ) : (
           <p className="muted">
             {recorded
-              ? t("Scénarios non conservés pour cette tentative.")
-              : t("Les estimations apparaîtront quand tosu aura chargé la map.")}
+              ? t("PP scenarios were not stored for this attempt.")
+              : t("Estimates will appear once tosu loads the map.")}
           </p>
         )}
       </section>

@@ -55,18 +55,18 @@ export function Account({
         className="profile-button"
         aria-label={
           profile
-            ? t("Compte osu! : {{name}}", { name: profile.username })
-            : t("Connecter mon compte osu!")
+            ? t("osu! account: {{name}}", { name: profile.username })
+            : t("Connect my osu! account")
         }
         aria-haspopup="dialog"
         onClick={() => setOpen(true)}
       >
         {profile?.avatarUrl ? <img src={profile.avatarUrl} alt="" /> : <UserRound size={18} />}
-        <span>{profile?.username || t("Connexion osu!")}</span>
+        <span>{profile?.username || t("Connect osu!")}</span>
       </button>
       {open && (
         <Dialog
-          title={profile ? t("Mon compte osu!") : t("Connecter mon compte osu!")}
+          title={profile ? t("My osu! account") : t("Connect my osu! account")}
           onClose={() => setOpen(false)}
         >
           {query.isError && (
@@ -101,7 +101,7 @@ export function Account({
               </div>
               <p className="muted">
                 {t(
-                  "Profil en cache. Les meilleurs scores seront intégrés au moteur de farm dans une prochaine version.",
+                  "Cached profile. Top scores will be integrated into the farm engine in a future version.",
                 )}
               </p>
               <div className="dialog-actions">
@@ -111,7 +111,7 @@ export function Account({
                   onClick={() => void change("refresh")}
                 >
                   <RefreshCw size={15} />
-                  {t("Actualiser le profil")}
+                  {t("Refresh profile")}
                 </button>
                 <button
                   className="secondary-button"
@@ -122,7 +122,7 @@ export function Account({
                   }
                 >
                   <ExternalLink size={15} />
-                  {t("Page officielle")}
+                  {t("Official page")}
                 </button>
                 <button
                   className="secondary-button"
@@ -130,7 +130,7 @@ export function Account({
                   onClick={() => void change("disconnect")}
                 >
                   <LogOut size={15} />
-                  {t("Déconnecter")}
+                  {t("Disconnect")}
                 </button>
               </div>
             </>
@@ -138,18 +138,18 @@ export function Account({
             <>
               <p>
                 {t(
-                  "osu! ouvrira une page dans ton navigateur pour autoriser l’accès à ton identité et à ton profil public. Aucun mot de passe osu! n’est demandé dans l’application.",
+                  "osu! will open a page in your browser to authorize access to your identity and public profile. The application never asks for your osu! password.",
                 )}
               </p>
               {!query.data?.configured && (
                 <>
                   <p>
                     {t(
-                      "Crée une application OAuth osu!, puis renseigne son Client ID et son secret dans les Réglages.",
+                      "Create an osu! OAuth application, then enter its Client ID and secret in Settings.",
                     )}
                   </p>
                   <label className="oauth-callback-label">
-                    {t("Adresse de retour à enregistrer")}
+                    {t("Callback URL to register")}
                     <input
                       readOnly
                       value={query.data?.redirectUri || ""}
@@ -163,13 +163,13 @@ export function Account({
                       onSettings();
                     }}
                   >
-                    {t("Ouvrir les Réglages")}
+                    {t("Open Settings")}
                   </button>
                 </>
               )}
               {query.data?.pending && (
                 <p role="status">
-                  {t("Autorisation en attente dans le navigateur. Reviens ici après validation.")}
+                  {t("Waiting for authorization in your browser. Return here after approving.")}
                 </p>
               )}
               <button
@@ -178,7 +178,7 @@ export function Account({
                 onClick={() => void connect()}
               >
                 {busy ? <LoaderCircle className="spin" size={16} /> : <ExternalLink size={16} />}
-                {query.data?.pending ? t("Relancer la connexion") : t("Autoriser sur osu!")}
+                {query.data?.pending ? t("Restart connection") : t("Authorize on osu!")}
               </button>
             </>
           )}

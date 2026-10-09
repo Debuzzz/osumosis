@@ -1,7 +1,7 @@
 export const outcomes: Record<string, string> = {
-  completed: "Terminé",
+  completed: "Completed",
   failed: "Fail",
-  abandoned: "Abandon",
+  abandoned: "Abandoned",
   retry: "Retry",
-  interrupted: "Interrompu",
+  interrupted: "Interrupted",
 };

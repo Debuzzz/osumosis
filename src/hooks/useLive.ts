@@ -6,7 +6,7 @@ import { t } from "../lib/i18n";
 export function useLive() {
   const [live, setLive] = useState<LiveState>({
     connected: false,
-    state: t("Hors ligne"),
+    state: t("Offline"),
     client: "",
     paused: false,
     map: null,
