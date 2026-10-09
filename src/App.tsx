@@ -70,22 +70,100 @@ const outcomes: Record<string, string> = {
   retry: "Retry",
   interrupted: "Interrompu",
 };
-const starColor = (stars: number | null) =>
-  stars === null
-    ? "#777f90"
-    : stars < 2
-      ? "#79bfed"
-      : stars < 3
-        ? "#77d8c6"
-        : stars < 4
-          ? "#b8df79"
-          : stars < 5
-            ? "#e4d374"
-            : stars < 6
-              ? "#efa981"
-              : stars < 7
-                ? "#e97f9d"
-                : "#c89bec";
+
+function starColor(stars: number | null) {
+  if (stars === null) return "#777f90";
+
+  const stops = [
+    [0, "#777f90"],
+    [0.1, "#4290fb"],
+    [0.5, "#47A3FC"],
+    [1, "#4CB7FE"],
+    [1.5, "#4FD8F2"],
+    [2, "#4FFFD5"],
+    [2.5, "#7CFF4F"],
+    [3, "#D3F657"],
+    [3.5, "#F8DD5F"],
+    [4, "#FDA265"],
+    [4.5, "#FF6E6B"],
+    [5, "#F94D7A"],
+    [5.5, "#DB48A4"],
+    [6, "#B64DC1"],
+    [6.5, "#B64DC1"],
+    [7, "#5654CA"],
+    [7.5, "#3331A2"],
+    [8, "#14117D"],
+    [8.5, "#0B095A"],
+    [9, "#000000"],
+  ] as const;
+
+  const value = Math.max(0, Math.min(stars, 9));
+  const i = stops.findIndex(([threshold]) => threshold >= value);
+  const [start, startColor] = stops[Math.max(0, i - 1)];
+  const [end, endColor] = stops[Math.max(0, i)];
+
+  const startRgb = hexToRgb(startColor);
+  const endRgb = hexToRgb(endColor);
+  const t = end === start ? 0 : (value - start) / (end - start);
+
+  const channel = (a: number, b: number) =>
+    Math.round(a + (b - a) * t)
+      .toString(16)
+      .padStart(2, "0");
+
+  return `#${channel(startRgb[0], endRgb[0])}${channel(
+    startRgb[1],
+    endRgb[1],
+  )}${channel(startRgb[2], endRgb[2])}`;
+}
+
+function textColor(stars: number | null) {
+  if (stars === null) return "#777f90";
+
+  const stops = [
+    [6.5, "#F8DD5F"],
+    [9, "#F8DD5F"],
+    [9.5, "#FDA265"],
+    [10, "#FF6E6B"],
+    [10.5, "#F94D7A"],
+    [11, "#DB48A4"],
+    [11.5, "#B64DC1"],
+    [12, "#B64DC1"],
+    [12.5, "#5654CA"],
+    [13, "#3331A2"],
+  ] as const;
+
+  // Keep the low difficulties at black, then start the gradient at 6.5★.
+  if (stars < 6.5) return "#000000";
+
+  const value = Math.max(6.5, Math.min(stars, 13));
+  const i = stops.findIndex(([threshold]) => threshold >= value);
+  const [start, startColor] = stops[Math.max(0, i - 1)];
+  const [end, endColor] = stops[Math.max(0, i)];
+
+  const startRgb = hexToRgb(startColor);
+  const endRgb = hexToRgb(endColor);
+  const t = end === start ? 0 : (value - start) / (end - start);
+
+  const channel = (a: number, b: number) =>
+    Math.round(a + (b - a) * t)
+      .toString(16)
+      .padStart(2, "0");
+
+  return `#${channel(startRgb[0], endRgb[0])}${channel(
+    startRgb[1],
+    endRgb[1],
+  )}${channel(startRgb[2], endRgb[2])}`;
+}
+
+function hexToRgb(hex: string): [number, number, number] {
+  return [
+    parseInt(hex.slice(1, 3), 16),
+    parseInt(hex.slice(3, 5), 16),
+    parseInt(hex.slice(5, 7), 16),
+  ];
+}
+
 function coverUrl(map: Beatmap, allowFetch = false) {
   return map.hasBackground
     ? `/api/assets/${encodeURIComponent(map.key)}/background`
@@ -93,6 +171,7 @@ function coverUrl(map: Beatmap, allowFetch = false) {
       ? `/api/covers/${encodeURIComponent(map.key)}?fetch=${allowFetch ? "1" : "0"}`
       : null;
 }
+
 function useLive() {
   const [live, setLive] = useState<LiveState>({
     connected: false,
@@ -964,12 +1043,25 @@ function MapCard({
   onSelect: (m: Beatmap) => void;
   allowFetch?: boolean;
 }) {
-  const map = maps[0],
-    cover = coverUrl(map, allowFetch);
+  const map = maps[0];
+  const sortedMaps = [...maps].sort((a, b) => {
+    if (a.stars === null) return b.stars === null ? 0 : 1;
+    if (b.stars === null) return -1;
+    return a.stars - b.stars;
+  });
+  const ratedMaps = sortedMaps.filter((m) => m.stars !== null);
+  const lowestMap = ratedMaps[0];
+  const highestMap = ratedMaps[ratedMaps.length - 1];
+  const cover = coverUrl(map, allowFetch);
   return (
     <article
       className="map-card"
-      style={{ "--map-color": starColor(map.stars) } as React.CSSProperties}
+      style={
+        {
+          "--map-color": starColor(map.stars),
+          "--map-text-color": textColor(map.stars),
+        } as React.CSSProperties
+      }
     >
       <button
         className={`card-image ${cover ? "" : "no-cover"}`}
@@ -1011,7 +1103,7 @@ function MapCard({
       </div>
       <div className="difficulty-row">
         <div className="difficulty-dots">
-          {maps.slice(0, 12).map((m) => (
+          {sortedMaps.slice(0, 12).map((m) => (
             <button
               key={m.key}
               style={{ background: starColor(m.stars) }}
@@ -1022,9 +1114,30 @@ function MapCard({
           ))}
         </div>
         <span>{modes[map.mode]}</span>
-        <span className="difficulty-rating">
+        <span
+          className="difficulty-rating"
+          style={
+            {
+              "--map-color": starColor(lowestMap?.stars ?? null),
+              "--map-text-color": textColor(lowestMap?.stars ?? null),
+            } as React.CSSProperties
+          }
+        >
           <Star size={11} fill="currentColor" />
-          {map.stars?.toFixed(2) ?? "—"}
+          {lowestMap?.stars?.toFixed(2) ?? "—"}
+        </span>
+        <span>-</span>
+        <span
+          className="difficulty-rating"
+          style={
+            {
+              "--map-color": starColor(highestMap?.stars ?? null),
+              "--map-text-color": textColor(highestMap?.stars ?? null),
+            } as React.CSSProperties
+          }
+        >
+          <Star size={11} fill="currentColor" />
+          {highestMap?.stars?.toFixed(2) ?? "—"}
         </span>
       </div>
       <div className="card-meta">

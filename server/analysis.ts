@@ -25,10 +25,15 @@ export class Analyzer {
       const dev = import.meta.url.endsWith(".ts");
       const result = await new Promise<Analysis>((resolve, reject) => {
         const worker = new Worker(
-          new URL(dev ? "./analysis-worker.ts" : "./analysis-worker.js", import.meta.url),
+          dev ? new URL("./dev-worker.mjs", import.meta.url) : new URL("./analysis-worker.js", import.meta.url),
           {
-            workerData: { file: actual, checksum, mods, client },
-            execArgv: dev ? ["--import", "tsx"] : [],
+            workerData: {
+              file: actual,
+              checksum,
+              mods,
+              client,
+              ...(dev ? { entry: new URL("./analysis-worker.ts", import.meta.url).href } : {}),
+            },
             resourceLimits: { maxOldGenerationSizeMb: 256 },
           },
         );

@@ -13,8 +13,13 @@ export class Catalog extends EventEmitter {
     super();
     const development = import.meta.url.endsWith(".ts");
     this.worker = new Worker(
-      new URL(development ? "./catalog-worker.ts" : "./catalog-worker.js", import.meta.url),
-      { workerData: { dataDir }, execArgv: development ? ["--import", "tsx"] : [] },
+      development ? new URL("./dev-worker.mjs", import.meta.url) : new URL("./catalog-worker.js", import.meta.url),
+      {
+        workerData: {
+          dataDir,
+          ...(development ? { entry: new URL("./catalog-worker.ts", import.meta.url).href } : {}),
+        },
+      },
     );
     this.ready = new Promise((resolve, reject) => {
       this.worker.on("message", (message) => {
