@@ -6,6 +6,8 @@ Les changements sont regroupés par version selon [Keep a Changelog](https://kee
 
 ### Added
 
+- Hooks Git de commit/push et CI de qualité Windows/Linux, avec lint strict, formatage, types, architecture, tests et build.
+
 - Vue commune Tes plays/direct, basculement automatique et sélection manuelle de l’historique.
 - Widgets de score partagés avec les tentatives sauvegardées, snapshot des nouvelles captures et PP FC dans la chronologie.
 - Filtres visibles de tags, source du morceau, mapper et difficulté dans la bibliothèque et les recommandations.
@@ -17,6 +19,9 @@ Les changements sont regroupés par version selon [Keep a Changelog](https://kee
 - Workflow de builds Windows/macOS/Linux et création d’une release GitHub en brouillon sur les tags `v*`.
 
 ### Changed
+
+- Architecture organisée par fonctionnalités : routes/services/repositories backend, vues et composants frontend, App conservé comme composition globale.
+- Contrat RPC du catalogue typé, séparation transport/normalisation/capture tosu et styles répartis en fichiers.
 
 - Chronologie et erreurs côte à côte, score dessous ; regroupement des misses/sliderbreaks par seconde.
 

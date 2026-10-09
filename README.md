@@ -28,6 +28,8 @@ npm run format:check  # vérifier le formatage
 npm run format        # formater les fichiers
 ```
 
+`npm ci` active les hooks Git : formatage/lint des fichiers préparés au commit, puis types et architecture ; `npm run verify` bloque le push si les contrôles, tests ou build échouent. La CI refait ces vérifications sous Windows et Linux. Voir [le guide de contribution](docs/CONTRIBUTING.md) et [l’architecture par fonctionnalités](docs/ARCHITECTURE.md).
+
 ## Prérequis et démarrage sous Windows
 
 - Node.js LTS **22.12 ou plus récent**, avec npm, installé normalement sur le PC (version x64 conseillée).

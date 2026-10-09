@@ -49,7 +49,10 @@ if (!license) {
 
 await mkdir(backend, { recursive: true });
 await writeFile(path.join(backend, "NODE-LICENSE.txt"), license);
-await copyFile(path.join(root, "package.json"), path.join(backend, "package.json"));
+const runtimePackage = JSON.parse(await readFile(path.join(root, "package.json"), "utf8"));
+// The staged backend needs dependency install scripts, but no development lifecycle hooks.
+delete runtimePackage.scripts;
+await writeFile(path.join(backend, "package.json"), JSON.stringify(runtimePackage, null, 2));
 await copyFile(path.join(root, "package-lock.json"), path.join(backend, "package-lock.json"));
 const run = (args, cwd) =>
   new Promise((resolve, reject) => {

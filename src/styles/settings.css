@@ -1,0 +1,90 @@
+.settings-section > label {
+  margin-bottom: 18px;
+}
+
+.settings-section .form-grid {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.settings-section p {
+  font-size: 10px;
+  color: #998ba5;
+  margin: 13px 0;
+}
+
+.settings-section label > span {
+  display: inline;
+}
+
+.settings-section label input {
+  font-size: 12px;
+}
+
+.text-link {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  color: #cda6dd;
+  font-size: 10px;
+}
+
+.text-link:hover {
+  color: #ead1f4;
+}
+
+.detected-paths {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #8f819d;
+  font-size: 9px;
+  margin: -3px 0 18px;
+}
+
+.detected-paths button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 9px;
+  border: 1px solid #4d3b5c;
+  border-radius: 5px;
+  background: #2d2337;
+  padding: 6px;
+  color: #ceafdf;
+}
+
+.settings-actions {
+  display: flex;
+  gap: 12px;
+  margin: 25px 0;
+}
+
+.toast {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  max-width: min(550px, calc(100vw - 48px));
+  background: #32243e;
+  border: 1px solid #80608c;
+  color: #e3cbed;
+  box-shadow: 0 8px 40px #0007;
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  gap: 11px;
+  align-items: center;
+  z-index: 100;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.toast svg {
+  flex-shrink: 0;
+}
+
+.toast button {
+  display: flex;
+  align-items: center;
+  margin-left: 10px;
+  color: #c9abd9;
+}

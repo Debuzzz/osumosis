@@ -1,0 +1,234 @@
+@media (max-width: 780px) {
+  .sidebar {
+    width: min(300px, calc(100vw - 48px));
+    padding: 20px 16px;
+    transform: translateX(-110%);
+    transition: transform 0.18s ease;
+    z-index: 60;
+    box-shadow: 20px 0 60px #0005;
+  }
+  .sidebar.navigation-open {
+    transform: translateX(0);
+  }
+  .sidebar .brand > span:nth-child(2),
+  .sidebar .workspace-label,
+  .sidebar .nav-item > span,
+  .sidebar .nav-item > em,
+  .sidebar .sidebar-section,
+  .sidebar .collection-nav,
+  .sidebar .local-note,
+  .sidebar .version {
+    display: revert;
+  }
+  .sidebar .sidebar-section {
+    display: flex;
+  }
+  .sidebar .collection-nav {
+    display: block;
+    min-height: 0;
+    overflow: auto;
+  }
+  .sidebar .local-note {
+    display: flex;
+  }
+  .sidebar .brand {
+    margin-top: 20px;
+  }
+  .sidebar .sidebar-bottom {
+    margin-top: auto;
+  }
+  .sidebar .nav-item {
+    font-size: 13px;
+    min-height: 46px;
+  }
+  .main-shell {
+    margin-left: 0;
+    width: 100%;
+  }
+  .mobile-menu,
+  .mobile-nav-close {
+    display: inline-flex;
+    flex-shrink: 0;
+  }
+  .mobile-nav-close {
+    position: absolute;
+    right: 12px;
+    top: 8px;
+  }
+  .navigation-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: #0009;
+    z-index: 50;
+    border: 0;
+  }
+  .topbar {
+    gap: 12px;
+    padding: 0 16px;
+    min-height: 64px;
+  }
+  .breadcrumb {
+    margin-right: auto;
+  }
+  .topbar-actions {
+    gap: 8px;
+  }
+  .profile-button > span {
+    display: none;
+  }
+  .profile-button {
+    height: 40px;
+    width: 40px;
+    padding: 5px;
+  }
+  .app-dialog {
+    padding: 20px;
+  }
+  .app-dialog > header h2 {
+    font-size: 18px;
+  }
+  .footer {
+    font-size: 10px;
+  }
+  .search-input {
+    gap: 9px;
+  }
+  .source-tabs {
+    flex-wrap: wrap;
+  }
+  .source-note {
+    width: 100%;
+    padding: 7px 0;
+    font-size: 10px;
+  }
+  .results-toolbar {
+    flex-wrap: wrap;
+    gap: 13px;
+  }
+  .results-toolbar > div {
+    min-width: 0;
+  }
+  .sort-tools {
+    margin-left: auto;
+  }
+  .page-heading {
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .page-heading p {
+    font-size: 12px;
+  }
+  .settings-section p {
+    font-size: 12px;
+    line-height: 1.7;
+  }
+  .search-help p {
+    font-size: 12px;
+  }
+  .map-card .mapper,
+  .map-card .card-meta {
+    font-size: 10px;
+  }
+  .filter-row .chips {
+    flex-wrap: wrap;
+  }
+  .more-filters {
+    min-height: 38px;
+  }
+  .topbar .status-pill {
+    font-size: 10px;
+    padding: 7px 9px;
+  }
+}
+
+@media (max-width: 480px) {
+  .breadcrumb {
+    display: none;
+  }
+  .topbar-actions {
+    margin-left: auto;
+  }
+  .source-tabs > button {
+    min-height: 42px;
+    font-size: 11px;
+  }
+  .filter-row {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .filter-row .chips {
+    flex: 1;
+  }
+  .filter-row .chips button {
+    min-height: 36px;
+  }
+  .results-toolbar {
+    align-items: flex-start;
+  }
+  .sort-tools {
+    margin-left: 0;
+  }
+  .app-dialog {
+    width: calc(100vw - 24px);
+    padding: 18px;
+  }
+  .account-summary img {
+    height: 64px;
+    width: 64px;
+  }
+  .dialog-actions {
+    flex-direction: column;
+  }
+  .dialog-actions button {
+    width: 100%;
+  }
+  .sidebar .version {
+    font-size: 11px;
+  }
+  .footer span {
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.release-trigger {
+  min-height: 44px;
+  font-size: 11px;
+  color: #b7adbf;
+  padding: 12px 0;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.release-trigger span {
+  font-size: 10px;
+  color: #cdb8d7;
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --line: #81828c;
+    --muted: #c6c6d0;
+  }
+  .secondary-button,
+  .icon-button,
+  .nav-item {
+    border-color: #85808c;
+  }
+  .muted,
+  .mapper,
+  .card-meta {
+    color: #d3ccd9 !important;
+  }
+}

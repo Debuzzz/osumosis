@@ -1,7 +1,7 @@
-import { Catalog } from "./catalog";
-import { dataDir, loadSettings } from "./config";
 import path from "node:path";
-import { selectedLibrary } from "./settings";
+import { Catalog } from "./features/catalog/service";
+import { selectedLibrary } from "./features/settings/model";
+import { dataDir, loadSettings } from "./features/settings/repository";
 
 const settings = await loadSettings();
 const args = process.argv.slice(2);

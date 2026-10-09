@@ -1,0 +1,221 @@
+.play-row:hover,
+.play-row.selected {
+  border-color: #745087;
+  background: #251e2e;
+}
+
+.play-icon {
+  display: flex;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  align-items: center;
+  justify-content: center;
+  background: #34273f;
+  color: #d6b1e5;
+  flex-shrink: 0;
+}
+
+.play-description {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+
+.play-description strong {
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #e1d6eb;
+}
+
+.play-description span {
+  font-size: 9px;
+  color: #95869f;
+}
+
+.play-value {
+  display: flex;
+  align-items: flex-end;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 75px;
+  font-size: 12px;
+}
+
+.play-value span {
+  font-size: 8px;
+  color: #9989a8;
+}
+
+.outcome {
+  font-size: 8px;
+  border-radius: 5px;
+  padding: 6px 8px;
+  background: #3b303f;
+  color: #baa3c8;
+}
+
+.outcome.completed {
+  color: #adcfbe;
+  background: #293c33;
+}
+
+.outcome.failed {
+  color: #eab0c1;
+  background: #442d3a;
+}
+
+.play-analysis {
+  margin-bottom: 22px;
+}
+
+.play-analysis > .muted {
+  font-size: 11px;
+  margin-bottom: 15px;
+}
+
+.event-list {
+  margin-top: 15px;
+}
+
+.event-list > div {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  padding: 9px 0;
+  border-bottom: 1px solid #302b3a;
+  font-size: 10px;
+  color: #a79ab3;
+}
+
+.event-kind {
+  color: #e2a6c0;
+  min-width: 115px;
+}
+
+.live-map {
+  display: flex;
+  align-items: center;
+  gap: 23px;
+  background: radial-gradient(ellipse at right, #45305d55, transparent 70%), #1d1b28;
+  border: 1px solid #3c304a;
+  padding: 30px;
+  border-radius: 12px;
+}
+
+.live-map-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 88px;
+  height: 88px;
+  background: #35293f;
+  border-radius: 12px;
+  color: #d0addf;
+  flex-shrink: 0;
+}
+
+.live-map .eyebrow {
+  margin-bottom: 9px;
+  font-size: 8px;
+}
+
+.live-map h2 {
+  font-size: 25px;
+  color: #e4d7ee;
+}
+
+.live-map p {
+  font-size: 11px;
+  color: #b8a8c6;
+  margin-top: 9px;
+}
+
+.live-stars {
+  margin-left: auto;
+  color: #ddade9;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 18px;
+  white-space: nowrap;
+}
+
+.live-progress {
+  height: 5px;
+  background: #32243d;
+  border-radius: 5px;
+  margin-top: 22px;
+  overflow: hidden;
+}
+
+.live-progress > div {
+  height: 100%;
+  background: var(--accent);
+  transition: width 0.2s;
+}
+
+.progress-times {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: #a08cb1;
+  margin: 9px 0 24px;
+}
+
+.live-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+}
+
+.live-metrics > div {
+  background: #1c1b26;
+  border: 1px solid #342b40;
+  border-radius: 10px;
+  padding: 21px;
+}
+
+.live-metrics span {
+  font-size: 10px;
+  color: #b69ec8;
+}
+
+.live-metrics strong {
+  display: block;
+  font-size: 28px;
+  color: #e0c4ec;
+  font-weight: 550;
+  margin-top: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 10px;
+  color: #b5a4c4;
+  border: 1px solid #453250;
+  background: #2a2031;
+  border-radius: 7px;
+  padding: 13px 15px;
+  margin-top: 20px;
+  line-height: 1.65;
+}
+
+.notice svg {
+  flex-shrink: 0;
+}
+
+.settings-form {
+  max-width: 900px;
+}
+
+.settings-section {
+  margin-bottom: 18px;
+}
