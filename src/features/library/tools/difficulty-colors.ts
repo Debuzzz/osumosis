@@ -24,24 +24,7 @@ export function starColor(stars: number | null) {
     [9, "#000000"],
   ] as const;
 
-  const value = Math.max(0, Math.min(stars, 9));
-  const i = stops.findIndex(([threshold]) => threshold >= value);
-  const [start, startColor] = stops[Math.max(0, i - 1)];
-  const [end, endColor] = stops[Math.max(0, i)];
-
-  const startRgb = hexToRgb(startColor);
-  const endRgb = hexToRgb(endColor);
-  const t = end === start ? 0 : (value - start) / (end - start);
-
-  const channel = (a: number, b: number) =>
-    Math.round(a + (b - a) * t)
-      .toString(16)
-      .padStart(2, "0");
-
-  return `#${channel(startRgb[0], endRgb[0])}${channel(
-    startRgb[1],
-    endRgb[1],
-  )}${channel(startRgb[2], endRgb[2])}`;
+  return createGradient(stops, stars, 0, 9);
 }
 export function textColor(stars: number | null) {
   if (stars === null) return "#777f90";
@@ -59,10 +42,18 @@ export function textColor(stars: number | null) {
     [13, "#3331A2"],
   ] as const;
 
-  // Keep the low difficulties at black, then start the gradient at 6.5★.
   if (stars < 6.5) return "#000000";
 
-  const value = Math.max(6.5, Math.min(stars, 13));
+  return createGradient(stops, stars, 6.5, 13);
+}
+
+function createGradient(
+  stops: readonly (readonly [number, string])[],
+  stars: number,
+  startStarsLevel: number,
+  endStarsLevel: number,
+) {
+  const value = Math.max(startStarsLevel, Math.min(stars, endStarsLevel));
   const i = stops.findIndex(([threshold]) => threshold >= value);
   const [start, startColor] = stops[Math.max(0, i - 1)];
   const [end, endColor] = stops[Math.max(0, i)];
@@ -81,6 +72,7 @@ export function textColor(stars: number | null) {
     endRgb[1],
   )}${channel(startRgb[2], endRgb[2])}`;
 }
+
 function hexToRgb(hex: string): [number, number, number] {
   return [
     parseInt(hex.slice(1, 3), 16),

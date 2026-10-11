@@ -1,26 +1,33 @@
 import { version } from "../../../package.json";
+import changelog from "../../../CHANGELOG.md?raw";
 import { Dialog } from "../../components/Dialog";
 import { t } from "../../lib/i18n";
+import { getChangelogRelease } from "./changelog";
 
 export function ReleaseNotes({ onClose }: { onClose: () => void }) {
+  const release = getChangelogRelease(changelog, version);
+
   return (
     <Dialog title={t("Release notes")} onClose={onClose}>
       <span className="badge">
-        {version} · {t("In preparation")}
+        {version} · {release?.date ?? t("Unreleased")}
       </span>
-      <ul className="release-notes">
-        <li>{t("Tauri desktop application with a bundled local backend.")}</li>
-        <li>{t("osu! account connection and cached public profile.")}</li>
-        <li>
-          {t("Translatable interface, mobile navigation and improved keyboard accessibility.")}
-        </li>
-        <li>{t("Stable/lazer profiles, infinite scrolling and tosu capture diagnostics.")}</li>
-        <li>
-          {t(
-            "A shared view for live gameplay and stored attempts, with a timeline and grouped errors.",
-          )}
-        </li>
-      </ul>
+      {release?.sections.length ? (
+        <div className="release-notes">
+          {release.sections.map(({ title, changes }) => (
+            <section key={title}>
+              <h3>{title}</h3>
+              <ul>
+                {changes.map((change, index) => (
+                  <li key={`${title}-${index}`}>{change}</li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
+      ) : (
+        <p>{t("No release notes are available for this version yet.")}</p>
+      )}
       <p>{t("Published versions and installers will be available in GitHub Releases.")}</p>
       <a
         className="secondary-button"
