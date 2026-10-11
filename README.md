@@ -10,7 +10,6 @@
   <a href="https://github.com/Debuzzz/osumosis/actions/workflows/quality.yml"><img src="https://github.com/Debuzzz/osumosis/actions/workflows/quality.yml/badge.svg" alt="Code quality workflow status" /></a>
   <a href="docs/USER_GUIDE.md"><img src="https://img.shields.io/badge/osu!-stable%20%2B%20lazer-deb0e9?style=flat-square" alt="Supports osu!stable and osu!lazer" /></a>
   <a href="docs/DESKTOP.md"><img src="https://img.shields.io/badge/desktop-Tauri%202-8ed7c6?style=flat-square" alt="Desktop powered by Tauri 2" /></a>
-  <a href="docs/CONTRIBUTING.md#ai-assisted-and-vibe-coded-contributions"><img src="https://img.shields.io/badge/AI--assisted%20PRs-welcome-deb0e9?style=flat-square" alt="AI-assisted pull requests welcome" /></a>
 </p>
 
 <p align="center">
