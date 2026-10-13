@@ -94,6 +94,7 @@
 - [ ] Merge library/recommendations, add mod filters and farm scenarios based on PP gains.
 - [ ] Customizable widgets for live views and saved attempts.
 - [ ] CSS theme editor in Settings, with preview and default-theme restoration.
+- [ ] Load supported palette settings from an installed osu!stable or osu!lazer skin, with skin selection, preview and reset. Read skin files without modifying the game installation.
 
 ## Code structure and quality
 

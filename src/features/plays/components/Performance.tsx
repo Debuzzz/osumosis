@@ -2,6 +2,8 @@ import { Target } from "lucide-react";
 import type { LiveState } from "../../../../shared/types";
 import { display, timeLabel } from "../../../lib/format";
 import { t } from "../../../lib/i18n";
+import { GradeBadge } from "../../../components/GradeBadge";
+import { ModBadges } from "../../../components/ModBadges";
 import { Background } from "./Background";
 
 export type PerformanceMap = Pick<
@@ -40,7 +42,7 @@ export function Performance({
         <div className="live-stage-content">
           <div className="live-track">
             <div className="eyebrow">
-              {client.toUpperCase()} · {play?.mods || "NM"} ·{" "}
+              {client.toUpperCase()} · <ModBadges mods={play?.mods} /> ·{" "}
               {recorded ? t("Recorded attempt") : t("Live")}
             </div>
             <h2>{map?.title || t("Select a map in the game")}</h2>
@@ -70,7 +72,7 @@ export function Performance({
             </div>
           </div>
           <div className="live-pp-focus">
-            <span className="live-grade">{play?.rank || "—"}</span>
+            <GradeBadge rank={play?.rank} className="live-grade" />
             <div>
               <strong>{display(play?.pp)}</strong>
               <span>pp</span>

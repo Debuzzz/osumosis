@@ -4,6 +4,10 @@ Changes are grouped by version following [Keep a Changelog](https://keepachangel
 
 ## [Unreleased]
 
+### Changed
+
+- Standardize mod badges and score grades with osu!lazer-inspired category and rank colors.
+
 ## [0.4.2] - 2026-10-09
 
 ### Changed

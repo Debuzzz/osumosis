@@ -6,6 +6,7 @@ import { api } from "../../lib/api";
 import { formatTime } from "../../lib/format";
 import { t } from "../../lib/i18n";
 import { outcomes } from "../../lib/play-outcomes";
+import { ModBadges } from "../../components/ModBadges";
 import { MapAnalysis } from "./components/MapAnalysis";
 import { coverUrl } from "./model";
 import { starColor } from "./tools/difficulty-colors";
@@ -176,7 +177,7 @@ export function MapDetail({
                   <span>
                     {p.misses} {t("misses")}
                   </span>
-                  <span>{p.mods}</span>
+                  <ModBadges mods={p.mods} />
                 </div>
               ))
             ) : (

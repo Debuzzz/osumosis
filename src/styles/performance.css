@@ -110,11 +110,7 @@
 }
 
 .live-grade {
-  display: inline-block;
-  font-size: 23px;
-  color: #90debd;
   line-height: 1.3;
-  font-weight: 750;
 }
 
 .live-pp-focus > div:not(.live-pp-target) {

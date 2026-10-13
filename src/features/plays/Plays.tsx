@@ -6,6 +6,7 @@ import { api } from "../../lib/api";
 import { display } from "../../lib/format";
 import { locale, t } from "../../lib/i18n";
 import { outcomes } from "../../lib/play-outcomes";
+import { ModBadges } from "../../components/ModBadges";
 import { TosuDiagnostics } from "../telemetry/TosuDiagnostics";
 import { Live } from "./Live";
 import { SavedPlay } from "./components/SavedPlay";
@@ -168,7 +169,7 @@ export function Plays({ live, onSettings }: { live: LiveState; onSettings: () =>
                   <div className="play-description">
                     <strong>{play.title}</strong>
                     <span>
-                      {play.version} · {play.mods}
+                      {play.version} · <ModBadges mods={play.mods} />
                       {play.partial ? t(" · Partial capture") : ""}
                       {play.sourceConfirmed === false ? t(" · Unconfirmed mode") : ""} ·{" "}
                       {new Date(play.startedAt).toLocaleString(locale())}
